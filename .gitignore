@@ -51,5 +51,8 @@ package-lock.json
 ## Claude
 .claude/
 
+## Scripts
+*.sh
+
 ## Secrets
 appsettings.Development.json
