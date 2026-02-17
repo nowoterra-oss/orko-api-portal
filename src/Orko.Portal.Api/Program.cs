@@ -90,6 +90,7 @@ app.MapDeclarationEndpoints();
 app.MapStatusEndpoints();
 app.MapArchiveEndpoints();
 app.MapDashboardEndpoints();
+app.MapLogEndpoints();
 
 app.MapHangfireDashboard("/hangfire");
 
