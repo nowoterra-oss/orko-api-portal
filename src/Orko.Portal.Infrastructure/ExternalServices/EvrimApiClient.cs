@@ -1,42 +1,85 @@
 using System.Diagnostics;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Orko.Portal.Domain.Interfaces;
-using Orko.Portal.Infrastructure.ExternalServices.EvrimModels;
 
 namespace Orko.Portal.Infrastructure.ExternalServices;
 
 public class EvrimApiClient : IEvrimApiClient
 {
     private readonly HttpClient _http;
+    private readonly IConfiguration _config;
     private readonly ILogger<EvrimApiClient> _logger;
+    private string? _cachedToken;
+    private DateTime _tokenExpiry = DateTime.MinValue;
 
-    public EvrimApiClient(HttpClient http, ILogger<EvrimApiClient> logger)
+    public EvrimApiClient(HttpClient http, IConfiguration config, ILogger<EvrimApiClient> logger)
     {
         _http = http;
+        _config = config;
         _logger = logger;
     }
 
-    public async Task<EvrimResponse> CreateExportDeclarationAsync(object request)
+    /// <summary>
+    /// JWT Token al (POST /api/login)
+    /// Token'i 55 dakika cache'le (tipik 60 dk ömür)
+    /// </summary>
+    public async Task<string> GetTokenAsync()
     {
-        return await SendAsync("Declaration/CreateExportDeclaration", request, "Export");
+        if (!string.IsNullOrEmpty(_cachedToken) && DateTime.UtcNow < _tokenExpiry)
+            return _cachedToken;
+
+        var username = _config["Evrim:Username"];
+        var password = _config["Evrim:Password"];
+
+        var request = new HttpRequestMessage(HttpMethod.Post, "api/login");
+        request.Headers.Add("username", username);
+        request.Headers.Add("password", password);
+
+        var response = await _http.SendAsync(request);
+        var body = await response.Content.ReadAsStringAsync();
+
+        if (!response.IsSuccessStatusCode)
+        {
+            _logger.LogError("Evrim login basarisiz: {StatusCode} | {Body}", (int)response.StatusCode, body);
+            throw new Exception($"Evrim login hatasi: {response.StatusCode}");
+        }
+
+        var result = JsonSerializer.Deserialize<JsonElement>(body);
+        _cachedToken = result.GetProperty("token").GetString()!;
+        _tokenExpiry = DateTime.UtcNow.AddMinutes(55);
+
+        _logger.LogInformation("Evrim JWT token alindi, gecerlilik: {Expiry}", _tokenExpiry);
+        return _cachedToken;
     }
 
     public async Task<EvrimResponse> CreateImportDeclarationAsync(object request)
-    {
-        return await SendAsync("Declaration/CreateImportDeclaration", request, "Import");
-    }
+        => await SendAsync("api/import", request, "Import-Create");
 
+    public async Task<EvrimResponse> CreateExportDeclarationAsync(object request)
+        => await SendAsync("api/export", request, "Export-Create");
+
+    public async Task<EvrimResponse> CreateStatusAsync(object request)
+        => await SendAsync("api/status", request, "Status-Create");
+
+    public async Task<EvrimResponse> CreateWorkOrderAsync(object request)
+        => await SendAsync("api/workorder", request, "WorkOrder-Create");
+
+    public async Task<EvrimResponse> SendWorkOrderAsync(object request)
+        => await SendAsync("api/sendworkorder", request, "SendWorkOrder");
+
+    public async Task<EvrimResponse> SendWorkOrderArchiveAsync(object request)
+        => await SendAsync("api/sendworkorderarchive", request, "SendWorkOrderArchive");
+
+    // Geriye uyumluluk icin (eski interface metotlari)
     public async Task<EvrimResponse> UploadArchiveAsync(object request)
-    {
-        return await SendAsync("Archive", request, "Archive");
-    }
+        => await SendWorkOrderArchiveAsync(request);
 
     public async Task<EvrimResponse> UpdateStatusAsync(object request)
-    {
-        return await SendAsync("Status", request, "Status");
-    }
+        => await CreateStatusAsync(request);
 
     private async Task<EvrimResponse> SendAsync(string endpoint, object request, string operationType)
     {
@@ -45,8 +88,13 @@ public class EvrimApiClient : IEvrimApiClient
 
         try
         {
+            // Token al ve header'a ekle
+            var token = await GetTokenAsync();
+            _http.DefaultRequestHeaders.Authorization =
+                new AuthenticationHeaderValue("Bearer", token);
+
             _logger.LogInformation(
-                "Evrim {Operation} baslatildi: {Endpoint} | Request: {Request}",
+                "Evrim {Operation}: {Endpoint} | Request: {Request}",
                 operationType, endpoint, requestJson);
 
             var response = await _http.PostAsJsonAsync(endpoint, request);
@@ -57,12 +105,27 @@ public class EvrimApiClient : IEvrimApiClient
                 "Evrim {Operation}: {StatusCode} | {Duration}ms | Response: {Response}",
                 operationType, (int)response.StatusCode, sw.ElapsedMilliseconds, responseBody);
 
+            // 401 ise token'i temizle ve tekrar dene
+            if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                _cachedToken = null;
+                _tokenExpiry = DateTime.MinValue;
+
+                _logger.LogWarning("Evrim token expired, yeniden deniyor...");
+                token = await GetTokenAsync();
+                _http.DefaultRequestHeaders.Authorization =
+                    new AuthenticationHeaderValue("Bearer", token);
+
+                response = await _http.PostAsJsonAsync(endpoint, request);
+                responseBody = await response.Content.ReadAsStringAsync();
+            }
+
             if (!response.IsSuccessStatusCode)
             {
                 return new EvrimResponse
                 {
                     Success = false,
-                    Message = $"Evrim API hatasi: {response.StatusCode}",
+                    ExceptionMessage = $"Evrim API hatasi: {response.StatusCode}",
                     RawResponse = responseBody
                 };
             }
@@ -86,7 +149,7 @@ public class EvrimApiClient : IEvrimApiClient
             return new EvrimResponse
             {
                 Success = false,
-                Message = $"Evrim baglanti hatasi: {ex.Message}"
+                ExceptionMessage = $"Evrim baglanti hatasi: {ex.Message}"
             };
         }
     }

@@ -1,4 +1,3 @@
-using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Orko.Portal.Domain.Interfaces;
@@ -14,68 +13,51 @@ public class EvrimStatusNotificationJob
     private readonly ILogger<EvrimStatusNotificationJob> _logger;
 
     public EvrimStatusNotificationJob(
-        PortalDbContext db,
-        IEvrimApiClient evrim,
-        ILogger<EvrimStatusNotificationJob> logger)
+        PortalDbContext db, IEvrimApiClient evrim, ILogger<EvrimStatusNotificationJob> logger)
     {
         _db = db;
         _evrim = evrim;
         _logger = logger;
     }
 
-    [AutomaticRetry(Attempts = 3, DelaysInSeconds = new int[] { 10, 30, 60 })]
+    [Hangfire.AutomaticRetry(Attempts = 3, DelaysInSeconds = new[] { 10, 30, 60 })]
     public async Task ExecuteAsync(Guid statusHistoryId)
     {
         var history = await _db.StatusHistories
-            .Include(h => h.WorkOrder)
+            .Include(s => s.WorkOrder)
                 .ThenInclude(w => w.Declaration)
-            .FirstOrDefaultAsync(h => h.Id == statusHistoryId);
+            .FirstOrDefaultAsync(s => s.Id == statusHistoryId);
 
-        if (history == null)
-        {
-            _logger.LogWarning("StatusHistory bulunamadi: {Id}", statusHistoryId);
-            return;
-        }
+        if (history == null) return;
 
-        if (history.EvrimNotified)
-        {
-            _logger.LogInformation("StatusHistory zaten bildirilmis: {Id}", statusHistoryId);
-            return;
-        }
-
-        var evrimDeclarationId = history.WorkOrder?.Declaration?.EvrimDeclarationId;
-        if (string.IsNullOrEmpty(evrimDeclarationId))
-        {
-            _logger.LogWarning(
-                "Evrim DeclarationId bulunamadi, statu bildirimi yapilamadi: {FileNumber}",
-                history.WorkOrder?.FileNumber);
-            return;
-        }
+        var declaration = history.WorkOrder.Declaration;
+        if (declaration == null || string.IsNullOrEmpty(declaration.EvrimDeclarationId)) return;
 
         var request = new EvrimStatusRequest
         {
-            DeclarationId = evrimDeclarationId,
-            Status = history.ToStatus.ToString()
+            EvrakTip = 0,  // Beyanname
+            ReferansNo = history.WorkOrder.FileNumber,
+            DosyaNo = declaration.EvrimDeclarationId,
+            IsTakipler = new List<EvrimIsTakip>
+            {
+                new()
+                {
+                    Kod = history.ToStatus.ToString()[..Math.Min(3, history.ToStatus.ToString().Length)],
+                    TarihSaat = history.CreatedAt.ToString("yyyy-MM-ddTHH:mm:ss"),
+                    Aciklama = $"{history.FromStatus} -> {history.ToStatus}",
+                    IsNot = history.Note
+                }
+            }
         };
 
-        var result = await _evrim.UpdateStatusAsync(request);
+        var result = await _evrim.CreateStatusAsync(request);
 
         history.EvrimNotified = result.Success;
         history.EvrimNotifiedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
 
-        if (result.Success)
-        {
-            _logger.LogInformation(
-                "Evrim statu bildirimi basarili: {FileNumber} -> {Status}",
-                history.WorkOrder?.FileNumber, history.ToStatus);
-        }
-        else
-        {
-            _logger.LogError(
-                "Evrim statu bildirimi basarisiz: {FileNumber} -> {Status} | Hata: {Error}",
-                history.WorkOrder?.FileNumber, history.ToStatus, result.Message);
-            throw new Exception($"Evrim statu bildirimi basarisiz: {result.Message}");
-        }
+        _logger.LogInformation(
+            "Evrim statu bildirimi: {FileNumber} | {Status} | Basarili: {Success}",
+            history.WorkOrder.FileNumber, history.ToStatus, result.Success);
     }
 }

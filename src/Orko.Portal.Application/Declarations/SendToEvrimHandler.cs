@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System.Text.Json;
 using Orko.Portal.Domain.Enums;
 using Orko.Portal.Domain.Interfaces;
 using Orko.Portal.Infrastructure.ExternalServices.EvrimModels;
@@ -35,24 +36,45 @@ public class SendToEvrimHandler
         if (string.IsNullOrEmpty(declaration.DeclarationData))
             throw new InvalidOperationException("Beyanname verileri bos. Once formu doldurun.");
 
+        // JSON'dan Evrim Declaration modeline donustur
+        EvrimDeclarationRequest evrimRequest;
+        try
+        {
+            evrimRequest = JsonSerializer.Deserialize<EvrimDeclarationRequest>(
+                declaration.DeclarationData,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+                ?? new EvrimDeclarationRequest();
+        }
+        catch (JsonException)
+        {
+            // Eski format ise wrapper olarak gonder
+            evrimRequest = new EvrimDeclarationRequest
+            {
+                ReferansNo = declaration.WorkOrder.FileNumber,
+                Aciklamalar = declaration.DeclarationData
+            };
+        }
+
+        // Referans numarasini her zaman set et
+        evrimRequest.ReferansNo ??= declaration.WorkOrder.FileNumber;
+        evrimRequest.Ihracat = declaration.DeclarationType == DeclarationType.Export;
+
         // Evrim'e gonder (tip'e gore import/export)
         EvrimResponse result;
         if (declaration.DeclarationType == DeclarationType.Export)
         {
-            var request = new EvrimExportRequest { DeclarationData = declaration.DeclarationData };
-            result = await _evrim.CreateExportDeclarationAsync(request);
+            result = await _evrim.CreateExportDeclarationAsync(evrimRequest);
         }
         else
         {
-            var request = new EvrimImportRequest { DeclarationData = declaration.DeclarationData };
-            result = await _evrim.CreateImportDeclarationAsync(request);
+            result = await _evrim.CreateImportDeclarationAsync(evrimRequest);
         }
 
         // Sonucu kaydet
         declaration.SentToEvrim = result.Success;
         declaration.SentAt = DateTime.UtcNow;
         declaration.EvrimResponse = result.RawResponse;
-        declaration.EvrimDeclarationId = result.DeclarationId;
+        declaration.EvrimDeclarationId = result.EvrimReferansNo;
 
         if (result.Success)
         {
@@ -60,7 +82,6 @@ public class SendToEvrimHandler
             declaration.WorkOrder.Status = WorkOrderStatus.EvrimeGonderildi;
             declaration.WorkOrder.UpdatedAt = DateTime.UtcNow;
 
-            // Statu gecmisi
             _db.StatusHistories.Add(new Domain.Entities.StatusHistory
             {
                 Id = Guid.NewGuid(),
@@ -68,7 +89,7 @@ public class SendToEvrimHandler
                 FromStatus = WorkOrderStatus.Hazirlaniyor,
                 ToStatus = WorkOrderStatus.EvrimeGonderildi,
                 ChangedBy = "System",
-                Note = "Evrim'e basariyla gonderildi.",
+                Note = $"Evrim'e basariyla gonderildi. EvrimRef: {result.EvrimReferansNo}",
                 CreatedAt = DateTime.UtcNow
             });
         }
@@ -76,8 +97,8 @@ public class SendToEvrimHandler
         await _db.SaveChangesAsync();
 
         _logger.LogInformation(
-            "Evrim gonderim sonucu: {FileNumber} | Basarili: {Success} | EvrimId: {EvrimId}",
-            declaration.WorkOrder.FileNumber, result.Success, result.DeclarationId);
+            "Evrim gonderim: {FileNumber} | Basarili: {Success} | EvrimRef: {Ref} | Mesaj: {Msg}",
+            declaration.WorkOrder.FileNumber, result.Success, result.EvrimReferansNo, result.ExceptionMessage);
 
         return result;
     }

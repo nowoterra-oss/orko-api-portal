@@ -1,4 +1,3 @@
-using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Orko.Portal.Domain.Interfaces;
@@ -14,63 +13,44 @@ public class EvrimArchiveUploadJob
     private readonly ILogger<EvrimArchiveUploadJob> _logger;
 
     public EvrimArchiveUploadJob(
-        PortalDbContext db,
-        IEvrimApiClient evrim,
-        ILogger<EvrimArchiveUploadJob> logger)
+        PortalDbContext db, IEvrimApiClient evrim, ILogger<EvrimArchiveUploadJob> logger)
     {
         _db = db;
         _evrim = evrim;
         _logger = logger;
     }
 
-    [AutomaticRetry(Attempts = 3, DelaysInSeconds = new int[] { 10, 30, 60 })]
+    [Hangfire.AutomaticRetry(Attempts = 3, DelaysInSeconds = new[] { 10, 30, 60 })]
     public async Task ExecuteAsync(Guid archiveId)
     {
         var archive = await _db.Archives
             .Include(a => a.Declaration)
+                .ThenInclude(d => d.WorkOrder)
             .FirstOrDefaultAsync(a => a.Id == archiveId);
 
-        if (archive == null)
-        {
-            _logger.LogWarning("Arsiv bulunamadi: {Id}", archiveId);
-            return;
-        }
-
-        if (archive.SentToEvrim)
-        {
-            _logger.LogInformation("Arsiv zaten gonderilmis: {Id}", archiveId);
-            return;
-        }
-
-        var evrimDeclarationId = archive.Declaration?.EvrimDeclarationId;
-        if (string.IsNullOrEmpty(evrimDeclarationId))
-        {
-            _logger.LogWarning("Evrim DeclarationId yok, arsiv gonderilemedi: {FileName}", archive.FileName);
-            return;
-        }
+        if (archive == null) return;
+        if (string.IsNullOrEmpty(archive.Declaration?.EvrimDeclarationId)) return;
 
         var request = new EvrimArchiveRequest
         {
-            DeclarationId = evrimDeclarationId,
             FileName = archive.FileName,
-            Base64Data = archive.Base64Data,
-            DocumentType = archive.DocumentType
+            FileRefNo = archive.Declaration.WorkOrder.FileNumber,
+            FileData = archive.Base64Data,
+            BelgeKod = archive.DocumentType?[..Math.Min(4, archive.DocumentType?.Length ?? 0)],
+            Tarih = archive.CreatedAt.ToString("yyyy-MM-ddTHH:mm:ss"),
+            Aciklama = archive.FileName,
+            Referans = archive.Declaration.EvrimDeclarationId,
+            EklemeTipi = "F"  // Firma tarafindan ekleniyor
         };
 
-        var result = await _evrim.UploadArchiveAsync(request);
+        var result = await _evrim.SendWorkOrderArchiveAsync(request);
 
         archive.SentToEvrim = result.Success;
         archive.SentAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
 
-        if (result.Success)
-        {
-            _logger.LogInformation("Arsiv Evrim'e gonderildi: {FileName}", archive.FileName);
-        }
-        else
-        {
-            _logger.LogError("Arsiv gonderilemedi: {FileName} | Hata: {Error}", archive.FileName, result.Message);
-            throw new Exception($"Arsiv gonderilemedi: {result.Message}");
-        }
+        _logger.LogInformation(
+            "Evrim arsiv yukleme: {FileName} -> {FileNumber} | Basarili: {Success}",
+            archive.FileName, archive.Declaration.WorkOrder.FileNumber, result.Success);
     }
 }
