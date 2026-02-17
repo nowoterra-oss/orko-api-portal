@@ -1,0 +1,250 @@
+  ### ============================================================
+  ### ORKO PORTAL - API TEST DOSYASI (.http / REST Client)
+  ### VS Code "REST Client" extension ile calistirilir
+  ### ============================================================
+
+  @baseUrl = http://localhost:5045/api
+  @apiKey = selsil-test-api-key-2026
+
+  ### ============================================================
+  ### 1. DASHBOARD
+  ### ============================================================
+
+  ### ============================================================
+  ### 2. IS EMRI (WORK ORDER) - Selsil Entegrasyonu
+  ### ============================================================
+
+  ### 2a. Ithalat is emri olustur (Selsil'den gelir)
+  POST {{baseUrl}}/work-orders
+  Content-Type: application/json
+  X-API-Key: {{apiKey}}
+
+  {
+    "selsilOrderId": "SEL-2026-001",
+    "type": "Import",
+    "customerName": "ABC Makine Sanayi A.Ş.",
+    "description": "Almanya'dan CNC tezgahı ithalatı",
+    "additionalData": {
+      "origin": "DE",
+      "incoterm": "CIF",
+      "currency": "EUR",
+      "totalValue": 125000
+    }
+  }
+
+  ### 2b. Ihracat is emri olustur
+  POST {{baseUrl}}/work-orders
+  Content-Type: application/json
+  X-API-Key: {{apiKey}}
+
+  {
+    "selsilOrderId": "SEL-2026-002",
+    "type": "Export",
+    "customerName": "XYZ Tekstil Ltd. Şti.",
+    "description": "İngiltere'ye kumaş ihracatı",
+    "additionalData": {
+      "destination": "GB",
+      "incoterm": "FOB",
+      "currency": "USD",
+      "totalValue": 48500
+    }
+  }
+
+  ### 2c. API Key olmadan is emri olustur (401 donmeli)
+  POST {{baseUrl}}/work-orders
+  Content-Type: application/json
+
+  {
+    "selsilOrderId": "SEL-UNAUTHORIZED",
+    "type": "Import"
+  }
+
+  ### 2d. Gecersiz tip ile is emri olustur (400 donmeli)
+  POST {{baseUrl}}/work-orders
+  Content-Type: application/json
+  X-API-Key: {{apiKey}}
+
+  {
+    "selsilOrderId": "SEL-BAD",
+    "type": "InvalidType"
+  }
+
+  ### 2e. Is emri listesi
+  GET {{baseUrl}}/work-orders?page=1&pageSize=20
+  Content-Type: application/json
+
+  ### 2f. Is emri listesi - filtreli
+  GET {{baseUrl}}/work-orders?status=Taslak&type=Import&page=1&pageSize=10
+  Content-Type: application/json
+
+  ### 2g. Is emri listesi - arama
+  GET {{baseUrl}}/work-orders?search=SEL-2026
+  Content-Type: application/json
+
+  ### 2h. Is emri detay (fileNumber ile)
+  # NOT: Asagidaki fileNumber'i 2a'dan donen sonuca gore degistirin
+  @fileNumber = ORK-20260218-0001
+  GET {{baseUrl}}/work-orders/{{fileNumber}}
+  Content-Type: application/json
+
+  ### ============================================================
+  ### 3. BEYANNAME (DECLARATION)
+  ### ============================================================
+
+  ### 3a. Beyanname detay
+  # NOT: declarationId'yi 2h'den donen response'daki declaration.id'den alin
+  @declarationId = BURAYA-DECLARATION-ID-YAZIN
+  GET {{baseUrl}}/declarations/{{declarationId}}
+  Content-Type: application/json
+
+  ### 3b. Beyanname guncelle - Ithalat ornegi (Evrim Declaration formati)
+  PUT {{baseUrl}}/declarations/{{declarationId}}
+  Content-Type: application/json
+
+  {
+    "declarationData": "{\"dosyaTipi\":\"T\",\"referansNo\":\"ORK-20260218-0001\",\"ihracat\":false,\"dosyaTarihi\":\"2026-02-18T10:00:00\",\"musteriVergi\":\"1234567890\",\"musteriUnvani\":\"ABC Makine Sanayi A.Ş.\",\"rejimKodu\":\"4000\",\"gumruk\":340100,\"ilkUlke\":\"DE\",\"sevkUlkesi\":\"DE\",\"ticaretUlkesi\":\"DE\",\"varisUlkesi\":\"TR\",\"teslimSekli\":\"CIF\",\"teslimYeri\":\"Istanbul\",\"konteyner\":\"1\",\"sinirdakiTasimaSekli\":\"10\",\"toplamFatura\":125000,\"toplamFaturaDovizi\":\"EUR\",\"toplamNavlun\":3500,\"toplamNavlunDovizi\":\"EUR\",\"toplamSigorta\":625,\"toplamSigortaDovizi\":\"EUR\",\"toplamBrutAgirlik\":8500,\"toplamNetAgirlik\":7200,\"kapAdedi\":4,\"odemeSekli\":\"1\",\"bankaKodu\":\"0046\",\"beyanSahibiUnvan\":\"ABC Makine Sanayi A.Ş.\",\"beyanSahibiVergiNo\":\"1234567890\",\"musavirVergiNo\":\"9876543210\",\"kalemler\":[{\"detayNo\":1,\"gtipNo\":\"8458.11.20.00.00\",\"menseiUlke\":\"DE\",\"brutAgirlik\":5000,\"netAgirlik\":4200,\"kalemFiyati\":85000,\"miktar\":1,\"miktarBirimi\":\"C62\",\"doviz\":\"EUR\",\"ticariTanim\":\"CNC Yatay Torna Tezgahı\",\"faturaNo\":\"INV-2026-4521\",\"faturaTarihi\":\"2026-02-10\",\"birimFiyat\":85000,\"kdvOrani\":\"20\",\"navlunMiktari\":2000,\"sigortaMiktari\":425},{\"detayNo\":2,\"gtipNo\":\"8466.93.50.00.00\",\"menseiUlke\":\"DE\",\"brutAgirlik\":3500,\"netAgirlik\":3000,\"kalemFiyati\":40000,\"miktar\":2,\"miktarBirimi\":\"C62\",\"doviz\":\"EUR\",\"ticariTanim\":\"CNC Tezgah Yedek Parça Seti\",\"faturaNo\":\"INV-2026-4521\",\"faturaTarihi\":\"2026-02-10\",\"birimFiyat\":20000,\"kdvOrani\":\"20\",\"navlunMiktari\":1500,\"sigortaMiktari\":200}]}"
+  }
+
+  ### 3c. Beyanname guncelle - Ihracat ornegi
+  # NOT: Ihracat is emrinin declaration ID'sini yazin
+  @exportDeclarationId = BURAYA-EXPORT-DECLARATION-ID-YAZIN
+  PUT {{baseUrl}}/declarations/{{exportDeclarationId}}
+  Content-Type: application/json
+
+  {
+    "declarationData": "{\"dosyaTipi\":\"H\",\"referansNo\":\"ORK-20260218-0002\",\"ihracat\":true,\"dosyaTarihi\":\"2026-02-18T10:00:00\",\"musteriVergi\":\"5678901234\",\"musteriUnvani\":\"XYZ Tekstil Ltd. Şti.\",\"rejimKodu\":\"1000\",\"gumruk\":340300,\"gidecegiUlke\":\"GB\",\"sevkUlkesi\":\"TR\",\"ticaretUlkesi\":\"GB\",\"cikisUlkesi\":\"TR\",\"teslimSekli\":\"FOB\",\"teslimYeri\":\"Mersin\",\"toplamFatura\":48500,\"toplamFaturaDovizi\":\"USD\",\"toplamBrutAgirlik\":12000,\"toplamNetAgirlik\":11500,\"kapAdedi\":25,\"beyanSahibiUnvan\":\"XYZ Tekstil Ltd. Şti.\",\"beyanSahibiVergiNo\":\"5678901234\",\"musavirVergiNo\":\"9876543210\",\"kalemler\":[{\"detayNo\":1,\"gtipNo\":\"5209.42.00.00.00\",\"menseiUlke\":\"TR\",\"brutAgirlik\":12000,\"netAgirlik\":11500,\"kalemFiyati\":48500,\"miktar\":25000,\"miktarBirimi\":\"MTR\",\"doviz\":\"USD\",\"ticariTanim\":\"Pamuklu denim kumaş, indigo boyalı\",\"faturaNo\":\"EXP-2026-089\",\"faturaTarihi\":\"2026-02-15\",\"birimFiyat\":1.94,\"kdvOrani\":\"0\"}]}"
+  }
+
+  ### 3d. Evrim'e gonder
+  # NOT: Evrim credential'lari appsettings.json'da tanimli olmalidir
+  POST {{baseUrl}}/declarations/{{declarationId}}/send
+  Content-Type: application/json
+
+  ### ============================================================
+  ### 4. STATU YONETIMI
+  ### ============================================================
+
+  ### 4a. Gecerli statu gecisleri
+  GET {{baseUrl}}/declarations/{{declarationId}}/status/transitions
+  Content-Type: application/json
+
+  ### 4b. Statuyu "Hazirlaniyor" yap
+  PUT {{baseUrl}}/declarations/{{declarationId}}/status
+  Content-Type: application/json
+
+  {
+    "newStatus": "Hazirlaniyor",
+    "note": "Beyanname hazirliklarina baslandi"
+  }
+
+  ### 4c. Statuyu "OnayBekliyor" yap
+  PUT {{baseUrl}}/declarations/{{declarationId}}/status
+  Content-Type: application/json
+
+  {
+    "newStatus": "OnayBekliyor",
+    "note": "Beyanname hazir, onay bekleniyor"
+  }
+
+  ### 4d. Statuyu "EvrimeGonderildi" yap
+  PUT {{baseUrl}}/declarations/{{declarationId}}/status
+  Content-Type: application/json
+
+  {
+    "newStatus": "EvrimeGonderildi",
+    "note": "Test - manuel statu degisikligi"
+  }
+
+  ### ============================================================
+  ### 5. ARSIV YONETIMI
+  ### ============================================================
+
+  ### 5a. Arsiv listesi
+  GET {{baseUrl}}/declarations/{{declarationId}}/archives
+  Content-Type: application/json
+
+  ### 5b. Arsiv yukle (Base64 ornek - kucuk test PDF)
+  POST {{baseUrl}}/declarations/{{declarationId}}/archives
+  Content-Type: application/json
+
+  {
+    "fileName": "fatura-INV-2026-4521.pdf",
+    "base64Data": "JVBERi0xLjQKMSAwIG9iago8PAovVHlwZSAvQ2F0YWxvZwovUGFnZXMgMiAwIFIKPj4KZW5kb2JqCjIgMCBvYmoKPDwKL1R5cGUgL1BhZ2VzCi9LaWRzIFszIDAgUl0KL0NvdW50IDEKL01lZGlhQm94IFswIDAgNjEyIDc5Ml0KPj4KZW5kb2JqCjMgMCBvYmoKPDwKL1R5cGUgL1BhZ2UKL1BhcmVudCAyIDAgUgo+PgplbmRvYmoKeHJlZgowIDQKMDAwMDAwMDAwMCA2NTUzNSBmIAowMDAwMDAwMDA5IDAwMDAwIG4gCjAwMDAwMDAwNjUgMDAwMDAgbiAKMDAwMDAwMDE3MyAwMDAwMCBuIAp0cmFpbGVyCjw8Ci9TaXplIDQKL1Jvb3QgMSAwIFIKPj4Kc3RhcnR4cmVmCjIyNgolJUVPRgo=",
+    "contentType": "application/pdf",
+    "documentType": "FATURA"
+  }
+
+  ### 5c. Ikinci arsiv yukle
+  POST {{baseUrl}}/declarations/{{declarationId}}/archives
+  Content-Type: application/json
+
+  {
+    "fileName": "packing-list-2026.pdf",
+    "base64Data": "JVBERi0xLjQKMSAwIG9iago8PAovVHlwZSAvQ2F0YWxvZwovUGFnZXMgMiAwIFIKPj4KZW5kb2JqCjIgMCBvYmoKPDwKL1R5cGUgL1BhZ2VzCi9LaWRzIFszIDAgUl0KL0NvdW50IDEKL01lZGlhQm94IFswIDAgNjEyIDc5Ml0KPj4KZW5kb2JqCjMgMCBvYmoKPDwKL1R5cGUgL1BhZ2UKL1BhcmVudCAyIDAgUgo+PgplbmRvYmoKeHJlZgowIDQKMDAwMDAwMDAwMCA2NTUzNSBmIAowMDAwMDAwMDA5IDAwMDAwIG4gCjAwMDAwMDAwNjUgMDAwMDAgbiAKMDAwMDAwMDE3MyAwMDAwMCBuIAp0cmFpbGVyCjw8Ci9TaXplIDQKL1Jvb3QgMSAwIFIKPj4Kc3RhcnR4cmVmCjIyNgolJUVPRgo=",
+    "contentType": "application/pdf",
+    "documentType": "PAKLIST"
+  }
+
+  ### 5d. Arsivi Evrim'e gonder
+  # NOT: archiveId'yi 5b response'undan alin
+  @archiveId = BURAYA-ARCHIVE-ID-YAZIN
+  POST {{baseUrl}}/declarations/{{declarationId}}/archives/{{archiveId}}/send
+  Content-Type: application/json
+
+  ### ============================================================
+  ### 6. LOGLAR
+  ### ============================================================
+
+  ### 6a. Log listesi
+  GET {{baseUrl}}/logs?page=1&pageSize=30
+  Content-Type: application/json
+
+  ### 6b. Log listesi - sayfalama
+  GET {{baseUrl}}/logs?page=2&pageSize=10
+  Content-Type: application/json
+
+  ### ============================================================
+  ### 7. UCTAN UCA TEST SENARYOSU
+  ### ============================================================
+  ###
+  ### Adim adim calistirin:
+  ###
+  ### 1) Dashboard'u kontrol et              -> 1. bolum
+  ### 2) Selsil'den ithalat is emri olustur  -> 2a (fileNumber ve declaration.id'yi not al)
+  ### 3) Is emri detayini kontrol et         -> 2h (fileNumber'i yaz)
+  ### 4) Beyanname detayini al               -> 3a (declarationId'yi yaz)
+  ### 5) Beyanname verisini doldur           -> 3b (declarationId ile)
+  ### 6) Beyanname detayini tekrar kontrol   -> 3a (declarationData dolu olmali)
+  ### 7) Statu gecislerini kontrol et        -> 4a
+  ### 8) Statuyu "Hazirlaniyor" yap          -> 4b
+  ### 9) Arsiv yukle                         -> 5b
+  ### 10) Evrim'e gonder                     -> 3d (Evrim credentials gerekli)
+  ### 11) Dashboard'u tekrar kontrol et      -> 1. bolum (sayilar degismeli)
+  ### 12) Loglari kontrol et                 -> 6a
+  ###
+  ### ============================================================
+
+  ### ============================================================
+  ### 8. HATA SENARYOLARI
+  ### ============================================================
+
+  ### 8a. Olmayan is emri
+  GET {{baseUrl}}/work-orders/ORK-YANLISDOSYA-0000
+  Content-Type: application/json
+
+  ### 8b. Olmayan beyanname
+  GET {{baseUrl}}/declarations/00000000-0000-0000-0000-000000000000
+  Content-Type: application/json
+
+  ### 8c. Bos beyanname Evrim'e gondermeye calis
+  # (declarationData bos ise hata donmeli)
+  # Bunun icin once yeni bir is emri olusturup, onu gondermeyi deneyin
+
+  ### 8d. Gecersiz statu gecisi
+  PUT {{baseUrl}}/declarations/{{declarationId}}/status
+  Content-Type: application/json
+
+  {
+    "newStatus": "GecersizStatu",
+    "note": "Bu hata donmeli"
+  }
