@@ -11,7 +11,7 @@ import { StatusBadge } from "@/components/shared/StatusBadge";
 import { TypeBadge } from "@/components/shared/TypeBadge";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { formatDate } from "@/lib/utils";
-import { ArrowLeft, Send, Clock, Archive, ExternalLink } from "lucide-react";
+import { ArrowLeft, FileEdit, Send, Clock, Archive, ExternalLink } from "lucide-react";
 
 export default function WorkOrderDetailPage() {
   const params = useParams();
@@ -138,7 +138,16 @@ export default function WorkOrderDetailPage() {
                 </div>
               </dl>
               <div>
-                <label className="text-xs text-gray-500 block mb-1">Beyanname Verileri</label>
+                <div className="flex items-center justify-between mb-1">
+                <label className="text-xs text-gray-500">Beyanname Verileri</label>
+                <Link
+                  href={`/declarations/${declaration.id}/edit`}
+                  className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 font-medium"
+                >
+                  <FileEdit className="w-3.5 h-3.5" />
+                  {declaration.sentToEvrim ? "Görüntüle" : "Düzenle"}
+                </Link>
+              </div>
                 <pre className="p-3 bg-gray-50 rounded-lg text-xs overflow-auto max-h-48 border">
                   {declaration.declarationData
                     ? (() => { try { return JSON.stringify(JSON.parse(declaration.declarationData), null, 2); } catch { return declaration.declarationData; } })()
