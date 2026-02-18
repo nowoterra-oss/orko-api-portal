@@ -1,0 +1,382 @@
+### ============================================================
+### EVRIM API - REST Client Test Dosyasi
+### VS Code "REST Client" extension ile calistirilir
+### ============================================================
+### Swagger: https://vrbmvc.evrim.com/EvrimEntMVC.dll/swagger/index.html
+### ============================================================
+
+@evrimBaseUrl = https://vrbmvc.evrim.com:443/EvrimEntMVC.dll/api
+@evrimUsername = EVRIM_8059
+@evrimPassword = Evrim8059
+
+### ============================================================
+### 1. AUTHENTICATION - JWT Token Al
+### ============================================================
+
+### 1a. Login - JWT Token olustur
+POST {{evrimBaseUrl}}/login
+Content-Type: application/json
+username: {{evrimUsername}}
+password: {{evrimPassword}}
+
+### Token'i buraya yapistiriniz (1a response'undan)
+@token = eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJFdnJpbSBGcmFtZXdvcmsgU3dhZ2dlciBEb2N1bWVudGF0aW9uIiwiZXhwIjoxNzcxNDQ3NzU3LCJuYmYiOjE3NzE0NDM4NTcsImlhdCI6MTc3MTQ0NDE1Nywicm9sZXMiOiIiLCJ1c2VybmFtZSI6IkVWUklNXzgwNTkifQ.JqYdMn_gJVTzjqBXOa4G_lGdps5mhYOa__2QytJo811tphraaGS447ox9e_QNjXpTgzAh2hcpLlqzJ0Fo_aTjQ
+
+### ============================================================
+### 2. ITHALAT (IMPORT) DOSYA ISLEMLERI
+### ============================================================
+
+### 2a. Ithalat dosyasi olustur
+POST {{evrimBaseUrl}}/import
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "refId": "ORK01",
+  "dosyaTipi": "T",
+  "referansNo": "ORK-2026-IMP-001",
+  "musteriVergi": "1234567890",
+  "musteriUnvani": "ABC Makine Sanayi A.S.",
+  "gumruk": 340100,
+  "rejimKodu": "4000",
+  "ilkUlke": "DE",
+  "sevkUlkesi": "DE",
+  "ticaretUlkesi": "DE",
+  "varisUlkesi": "TR",
+  "teslimSekli": "CIF",
+  "teslimYeri": "Istanbul",
+  "konteyner": "1",
+  "sinirdakiTasimaSekli": "10",
+  "toplamFatura": 125000,
+  "toplamFaturaDovizi": "EUR",
+  "toplamNavlun": 3500,
+  "toplamNavlunDovizi": "EUR",
+  "toplamSigorta": 625,
+  "toplamSigortaDovizi": "EUR",
+  "toplamBrutAgirlik": 8500,
+  "toplamNetAgirlik": 7200,
+  "kapAdedi": 4,
+  "odemeSekli": "1",
+  "bankaKodu": "0046",
+  "beyanSahibiUnvan": "ABC Makine Sanayi A.S.",
+  "beyanSahibiVergiNo": "1234567890",
+  "musavirVergiNo": "9876543210",
+  "kalemler": [
+    {
+      "detayNo": 1,
+      "gtipNo": "8458.11.20.00.00",
+      "menseiUlke": "DE",
+      "brutAgirlik": 5000,
+      "netAgirlik": 4200,
+      "kalemFiyati": 85000,
+      "miktar": 1,
+      "miktarBirimi": "C62",
+      "doviz": "EUR",
+      "ticariTanim": "CNC Yatay Torna Tezgahi",
+      "faturaNo": "INV-2026-4521",
+      "faturaTarihi": "2026-02-10",
+      "birimFiyat": 85000,
+      "kdvOrani": "20",
+      "navlunMiktari": 2000,
+      "sigortaMiktari": 425
+    },
+    {
+      "detayNo": 2,
+      "gtipNo": "8466.93.50.00.00",
+      "menseiUlke": "DE",
+      "brutAgirlik": 3500,
+      "netAgirlik": 3000,
+      "kalemFiyati": 40000,
+      "miktar": 2,
+      "miktarBirimi": "C62",
+      "doviz": "EUR",
+      "ticariTanim": "CNC Tezgah Yedek Parca Seti",
+      "faturaNo": "INV-2026-4521",
+      "faturaTarihi": "2026-02-10",
+      "birimFiyat": 20000,
+      "kdvOrani": "20",
+      "navlunMiktari": 1500,
+      "sigortaMiktari": 200
+    }
+  ]
+}
+
+### 2b. Ithalat dosya bilgisi getir - Evrim dosya numarasi ile
+@importDosyaNo = BURAYA-EVRIM-DOSYA-NO-YAZIN
+GET {{evrimBaseUrl}}/import?dosyaNo={{importDosyaNo}}
+Authorization: Bearer {{token}}
+
+### 2c. Ithalat dosya bilgisi getir - Referans numarasi ile
+GET {{evrimBaseUrl}}/import?referansNo=ORK-2026-IMP-001
+Authorization: Bearer {{token}}
+
+### 2d. Ithalat dosya bilgisi getir - Beyanname numarasi ile
+@importBeyannameNo = BURAYA-BEYANNAME-NO-YAZIN
+GET {{evrimBaseUrl}}/import?beyannameNo={{importBeyannameNo}}
+Authorization: Bearer {{token}}
+
+### 2e. Ithalat dosya bilgisi getir - Orijinal dosyadan
+GET {{evrimBaseUrl}}/import?dosyaNo={{importDosyaNo}}&orjinaldosyadan=true
+Authorization: Bearer {{token}}
+
+### ============================================================
+### 3. IHRACAT (EXPORT) DOSYA ISLEMLERI
+### ============================================================
+
+### 3a. Ihracat dosyasi olustur
+POST {{evrimBaseUrl}}/export
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "refId": "ORK01",
+  "dosyaTipi": "H",
+  "referansNo": "ORK-2026-EXP-001",
+  "musteriVergi": "5678901234",
+  "musteriUnvani": "XYZ Tekstil Ltd. Sti.",
+  "gumruk": 340300,
+  "rejimKodu": "1000",
+  "gidecegiUlke": "GB",
+  "sevkUlkesi": "TR",
+  "ticaretUlkesi": "GB",
+  "cikisUlkesi": "TR",
+  "teslimSekli": "FOB",
+  "teslimYeri": "Mersin",
+  "toplamFatura": 48500,
+  "toplamFaturaDovizi": "USD",
+  "toplamBrutAgirlik": 12000,
+  "toplamNetAgirlik": 11500,
+  "kapAdedi": 25,
+  "beyanSahibiUnvan": "XYZ Tekstil Ltd. Sti.",
+  "beyanSahibiVergiNo": "5678901234",
+  "musavirVergiNo": "9876543210",
+  "kalemler": [
+    {
+      "detayNo": 1,
+      "gtipNo": "5209.42.00.00.00",
+      "menseiUlke": "TR",
+      "brutAgirlik": 12000,
+      "netAgirlik": 11500,
+      "kalemFiyati": 48500,
+      "miktar": 25000,
+      "miktarBirimi": "MTR",
+      "doviz": "USD",
+      "ticariTanim": "Pamuklu denim kumas, indigo boyali",
+      "faturaNo": "EXP-2026-089",
+      "faturaTarihi": "2026-02-15",
+      "birimFiyat": 1.94,
+      "kdvOrani": "0"
+    }
+  ]
+}
+
+### 3b. Ihracat dosya bilgisi getir - Evrim dosya numarasi ile
+@exportDosyaNo = BURAYA-EVRIM-DOSYA-NO-YAZIN
+GET {{evrimBaseUrl}}/export?dosyaNo={{exportDosyaNo}}
+Authorization: Bearer {{token}}
+
+### 3c. Ihracat dosya bilgisi getir - Referans numarasi ile
+GET {{evrimBaseUrl}}/export?referansNo=ORK-2026-EXP-001
+Authorization: Bearer {{token}}
+
+### 3d. Ihracat dosya bilgisi getir - Beyanname numarasi ile
+@exportBeyannameNo = BURAYA-BEYANNAME-NO-YAZIN
+GET {{evrimBaseUrl}}/export?beyannameNo={{exportBeyannameNo}}
+Authorization: Bearer {{token}}
+
+### ============================================================
+### 4. XML ILE DOSYA OLUSTURMA
+### ============================================================
+
+### 4a. XML ile dosya olustur
+POST {{evrimBaseUrl}}/create-xml
+Content-Type: application/xml
+Authorization: Bearer {{token}}
+
+<Declaration>
+  <RefId>ORK01</RefId>
+  <DosyaTipi>T</DosyaTipi>
+  <ReferansNo>ORK-2026-XML-001</ReferansNo>
+  <MusteriVergi>1234567890</MusteriVergi>
+  <MusteriUnvani>Test Firma A.S.</MusteriUnvani>
+  <Gumruk>340100</Gumruk>
+</Declaration>
+
+### ============================================================
+### 5. REZERVASYON (ToReserve)
+### ============================================================
+
+### 5a. Rezervasyon olustur
+POST {{evrimBaseUrl}}/ToReserve
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "refId": "ORK01",
+  "dosyaTipi": "T",
+  "referansNo": "ORK-2026-RSV-001",
+  "musteriVergi": "1234567890",
+  "musteriUnvani": "ABC Makine Sanayi A.S.",
+  "gumruk": 340100,
+  "rejimKodu": "4000",
+  "toplamFatura": 50000,
+  "toplamFaturaDovizi": "EUR"
+}
+
+### ============================================================
+### 6. DURUM (STATUS) ISLEMLERI
+### ============================================================
+
+### 6a. Durum olustur
+POST {{evrimBaseUrl}}/status
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "referansNo": "ORK-2026-IMP-001",
+  "fileReferansNo": "",
+  "tip": "T",
+  "dosyaNo": ""
+}
+
+### 6b. Durum getir - Referans numarasi ile
+GET {{evrimBaseUrl}}/status?referansNo=ORK-2026-IMP-001
+Authorization: Bearer {{token}}
+
+### 6c. Durum getir - Dosya numarasi ile
+GET {{evrimBaseUrl}}/status?dosyaNo={{importDosyaNo}}&tip=T
+Authorization: Bearer {{token}}
+
+### 6d. Durum getir - File referans numarasi ile
+GET {{evrimBaseUrl}}/status?fileReferansNo={{importDosyaNo}}
+Authorization: Bearer {{token}}
+
+### ============================================================
+### 7. MASRAF (EXPENSES) ISLEMLERI
+### ============================================================
+
+### 7a. Masraf olustur
+POST {{evrimBaseUrl}}/expenses
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "Dosya No": "",
+  "referansNo": "ORK-2026-IMP-001",
+  "Tip": "T"
+}
+
+### 7b. Masraf guncelle
+PUT {{evrimBaseUrl}}/expenses
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "Dosya No": "",
+  "referansNo": "ORK-2026-IMP-001",
+  "Tip": "T"
+}
+
+### 7c. Masraf getir - Dosya numarasi ile
+GET {{evrimBaseUrl}}/expenses?Dosya%20No={{importDosyaNo}}&Tip=T
+Authorization: Bearer {{token}}
+
+### 7d. Masraf getir - Referans numarasi ile
+GET {{evrimBaseUrl}}/expenses?referansNo=ORK-2026-IMP-001&Tip=T
+Authorization: Bearer {{token}}
+
+### ============================================================
+### 8. IS EMRI (WORKORDER) ISLEMLERI
+### ============================================================
+
+### 8a. Is emri olustur
+POST {{evrimBaseUrl}}/workorder
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "referansNo": "ORK-2026-IMP-001"
+}
+
+### 8b. Is emri guncelle
+PUT {{evrimBaseUrl}}/workorder
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "referansNo": "ORK-2026-IMP-001"
+}
+
+### 8c. Is emri getir
+GET {{evrimBaseUrl}}/workorder?referansNo=ORK-2026-IMP-001
+Authorization: Bearer {{token}}
+
+### 8d. Is emrini gumrukçuye gonder
+POST {{evrimBaseUrl}}/sendworkorder
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "referansNo": "ORK-2026-IMP-001"
+}
+
+### 8e. Is emri arsivini gumrukcuye gonder
+POST {{evrimBaseUrl}}/sendworkorderarchive
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "referansNo": "ORK-2026-IMP-001"
+}
+
+### ============================================================
+### 9. ARSIV (ARCHIVE) ISLEMLERI
+### ============================================================
+
+### 9a. Arsiv dosyasi getir (tek PDF)
+@evrimBeyannameId = BURAYA-EVRIM-BEYANNAME-ID-YAZIN
+GET {{evrimBaseUrl}}/archive?id={{evrimBeyannameId}}
+Authorization: Bearer {{token}}
+
+### ============================================================
+### 10. BEYANNAME GORUNTULEME VE KONTROL
+### ============================================================
+
+### 10a. Beyanname goruntusu getir
+@declarationImageId = BURAYA-ID-YAZIN
+@declarationImageDosya = BURAYA-DOSYA-YAZIN
+GET {{evrimBaseUrl}}/declaration-image?id={{declarationImageId}}&dosya={{declarationImageDosya}}
+Authorization: Bearer {{token}}
+
+### 10b. Beyanname kontrol (dosya kontrol baslat)
+@evrimDosyaNoKontrol = BURAYA-EVRIM-DOSYA-NO-YAZIN
+GET {{evrimBaseUrl}}/beyanname-kontrol?beyannameId={{evrimDosyaNoKontrol}}
+Authorization: Bearer {{token}}
+
+### 10c. Beyanname kontrol sonuc
+GET {{evrimBaseUrl}}/beyanname-kontrol-sonuc?beyannameId={{evrimDosyaNoKontrol}}
+Authorization: Bearer {{token}}
+
+### 10d. Beyanname kontrol genel
+GET {{evrimBaseUrl}}/beyanname-kontrol-genel?beyannameId={{evrimDosyaNoKontrol}}
+Authorization: Bearer {{token}}
+
+### ============================================================
+### 11. UCTAN UCA TEST SENARYOSU
+### ============================================================
+###
+### Adim adim calistirin:
+###
+### 1) Login yapip JWT token alin              -> 1a
+### 2) Token'i @token degiskenine yapisitirin
+### 3) Ithalat dosyasi olusturun               -> 2a (dosyaNo'yu not alin)
+### 4) Dosya bilgisi kontrol edin              -> 2b veya 2c
+### 5) Durum sorgulama yapin                   -> 6b
+### 6) Ihracat dosyasi olusturun               -> 3a (dosyaNo'yu not alin)
+### 7) Dosya bilgisi kontrol edin              -> 3b veya 3c
+### 8) Is emri olusturun                       -> 8a
+### 9) Beyanname kontrolu yapin                -> 10b
+### 10) Kontrol sonucunu goruntuleyin          -> 10c
+### 11) Arsivi cekerek kontrol edin            -> 9a
+###
+### ============================================================
