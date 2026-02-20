@@ -4,7 +4,7 @@ services:
     container_name: orko-sqlserver
     environment:
       ACCEPT_EULA: "Y"
-      MSSQL_SA_PASSWORD: "OrkoPortal2026!Prod"
+      MSSQL_SA_PASSWORD: "Orko_Portal2026"
       MSSQL_PID: "Express"
     ports:
       - "1433:1433"
@@ -12,7 +12,7 @@ services:
       - sqlserver-data:/var/opt/mssql
     restart: unless-stopped
     healthcheck:
-      test: /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "OrkoPortal2026!Prod" -C -Q "SELECT 1" || exit 1
+      test: /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "Orko_Portal2026" -C -Q "SELECT 1" || exit 1
       interval: 10s
       timeout: 5s
       retries: 10
@@ -25,7 +25,7 @@ services:
     container_name: orko-api
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__Default=Server=sqlserver,1433;Database=OrkoPortal;User Id=sa;Password=OrkoPortal2026!Prod;TrustServerCertificate=True;
+      - ConnectionStrings__Default=Server=sqlserver,1433;Database=OrkoPortal;User Id=sa;Password=Orko_Portal2026;TrustServerCertificate=True;
       - Frontend__Url=https://orko.nwtsoft.com
       - Evrim__BaseUrl=https://vrbmvc.evrim.com:443/EvrimEntMVC.dll/
       - Evrim__Username=EVRIM_8059
