@@ -142,7 +142,7 @@ function FormField({
 }) {
   return (
     <div className={span === 2 ? "sm:col-span-2" : ""}>
-      <label className="block text-xs font-medium text-gray-600 mb-1.5">{label}</label>
+      <label className="block text-sm font-medium text-gray-700 mb-1.5">{label}</label>
       {children}
     </div>
   );
@@ -169,7 +169,7 @@ function TextInput({
       placeholder={placeholder}
       maxLength={maxLength}
       disabled={disabled}
-      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-500"
+      className="input-base"
     />
   );
 }
@@ -193,7 +193,7 @@ function NumberInput({
       onChange={(e) => onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
       placeholder={placeholder}
       disabled={disabled}
-      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-500"
+      className="input-base"
     />
   );
 }
@@ -216,7 +216,7 @@ function SelectInput({
       value={value || ""}
       onChange={(e) => onChange(e.target.value)}
       disabled={disabled}
-      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-500"
+      className="input-base"
     >
       <option value="">{placeholder || "Seçiniz..."}</option>
       {options.map((o) => (
@@ -428,7 +428,7 @@ export default function DeclarationEditPage() {
   // =====================
 
   const renderGenelTab = () => (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
       <FormField label="Dosya Tipi">
         <SelectInput
           value={form.dosyaTipi}
@@ -457,7 +457,7 @@ export default function DeclarationEditPage() {
         <TextInput value={form.gumruk} onChange={(v) => updateForm("gumruk", v)} disabled={isReadOnly} maxLength={10} placeholder="Ör: 340100" />
       </FormField>
       <FormField label="Dosya Tarihi">
-        <input type="datetime-local" value={form.dosyaTarihi?.slice(0, 16) || ""} onChange={(e) => updateForm("dosyaTarihi", e.target.value ? e.target.value + ":00" : undefined)} disabled={isReadOnly} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100" />
+        <input type="datetime-local" value={form.dosyaTarihi?.slice(0, 16) || ""} onChange={(e) => updateForm("dosyaTarihi", e.target.value ? e.target.value + ":00" : undefined)} disabled={isReadOnly} className="input-base" />
       </FormField>
       <FormField label="Basitleştirilmiş Usul">
         <TextInput value={form.basitlestirilmisUsul} onChange={(v) => updateForm("basitlestirilmisUsul", v)} disabled={isReadOnly} maxLength={2} />
@@ -469,13 +469,13 @@ export default function DeclarationEditPage() {
         <TextInput value={form.olusturanKullanici} onChange={(v) => updateForm("olusturanKullanici", v)} disabled={isReadOnly} maxLength={10} />
       </FormField>
       <FormField label="Açıklamalar" span={2}>
-        <textarea value={form.aciklamalar || ""} onChange={(e) => updateForm("aciklamalar", e.target.value)} disabled={isReadOnly} maxLength={250} rows={2} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100" placeholder="Açıklama giriniz..." />
+        <textarea value={form.aciklamalar || ""} onChange={(e) => updateForm("aciklamalar", e.target.value)} disabled={isReadOnly} maxLength={250} rows={2} className="input-base" placeholder="Açıklama giriniz..." />
       </FormField>
     </div>
   );
 
   const renderMusteriTab = () => (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
       <FormField label="Müşteri VKN">
         <TextInput value={form.musteriVergi} onChange={(v) => updateForm("musteriVergi", v)} disabled={isReadOnly} maxLength={15} placeholder="Vergi kimlik numarası" />
       </FormField>
@@ -498,7 +498,7 @@ export default function DeclarationEditPage() {
   );
 
   const renderUlkeTab = () => (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
       <FormField label="İlk Ülke">
         <TextInput value={form.ilkUlke} onChange={(v) => updateForm("ilkUlke", v)} disabled={isReadOnly} maxLength={4} placeholder="Ör: DE" />
       </FormField>
@@ -521,7 +521,7 @@ export default function DeclarationEditPage() {
   );
 
   const renderTasimaTab = () => (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
       <FormField label="Teslim Şekli">
         <SelectInput value={form.teslimSekli} onChange={(v) => updateForm("teslimSekli", v)} disabled={isReadOnly}
           options={[
@@ -574,7 +574,7 @@ export default function DeclarationEditPage() {
   );
 
   const renderMaliTab = () => (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
       <FormField label="Toplam Fatura">
         <NumberInput value={form.toplamFatura} onChange={(v) => updateForm("toplamFatura", v)} disabled={isReadOnly} placeholder="0.00" />
       </FormField>
@@ -622,7 +622,7 @@ export default function DeclarationEditPage() {
   );
 
   const renderDigerTab = () => (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
       <FormField label="Ödeme Şekli">
         <TextInput value={form.odemeSekli} onChange={(v) => updateForm("odemeSekli", v)} disabled={isReadOnly} maxLength={15} />
       </FormField>
@@ -630,7 +630,7 @@ export default function DeclarationEditPage() {
         <TextInput value={form.bankaKodu} onChange={(v) => updateForm("bankaKodu", v)} disabled={isReadOnly} maxLength={12} />
       </FormField>
       <FormField label="Tahmini Varış Tarihi">
-        <input type="date" value={form.tahminiVarisTarihi || ""} onChange={(e) => updateForm("tahminiVarisTarihi", e.target.value)} disabled={isReadOnly} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100" />
+        <input type="date" value={form.tahminiVarisTarihi || ""} onChange={(e) => updateForm("tahminiVarisTarihi", e.target.value)} disabled={isReadOnly} className="input-base" />
       </FormField>
     </div>
   );
@@ -728,7 +728,7 @@ export default function DeclarationEditPage() {
       </div>
 
       {/* Tab Content */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
+      <div className="card p-6">
         {activeTab === "genel" && renderGenelTab()}
         {activeTab === "musteri" && renderMusteriTab()}
         {activeTab === "ulke" && renderUlkeTab()}
@@ -773,7 +773,7 @@ function KalemCard({
   const [expanded, setExpanded] = useState(true);
 
   return (
-    <div className="border border-gray-200 rounded-xl overflow-hidden">
+    <div className="card overflow-hidden">
       {/* Header */}
       <div
         className="flex items-center justify-between px-4 py-3 bg-gray-50 cursor-pointer"
@@ -802,7 +802,7 @@ function KalemCard({
 
       {/* Body */}
       {expanded && (
-        <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <FormField label="GTIP No">
             <TextInput value={kalem.gtipNo} onChange={(v) => onChange(index, "gtipNo", v)} disabled={readOnly} maxLength={16} placeholder="8544.42.90.00.00" />
           </FormField>
@@ -837,7 +837,7 @@ function KalemCard({
             <TextInput value={kalem.faturaNo} onChange={(v) => onChange(index, "faturaNo", v)} disabled={readOnly} maxLength={15} />
           </FormField>
           <FormField label="Fatura Tarihi">
-            <input type="date" value={kalem.faturaTarihi || ""} onChange={(e) => onChange(index, "faturaTarihi", e.target.value)} disabled={readOnly} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100" />
+            <input type="date" value={kalem.faturaTarihi || ""} onChange={(e) => onChange(index, "faturaTarihi", e.target.value)} disabled={readOnly} className="input-base" />
           </FormField>
           <FormField label="Navlun">
             <NumberInput value={kalem.navlunMiktari} onChange={(v) => onChange(index, "navlunMiktari", v)} disabled={readOnly} />

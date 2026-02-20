@@ -40,12 +40,12 @@ export default function DashboardLayout({
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 transform transition-transform lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-100 shadow-[var(--sidebar-shadow)] transform transition-transform lg:translate-x-0",
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
         <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
-          <Link href="/" className="text-xl font-bold text-blue-600">
+          <Link href="/" className="text-xl font-semibold tracking-tight text-blue-600">
             Orko Portal
           </Link>
           <button
@@ -68,7 +68,7 @@ export default function DashboardLayout({
                 href={item.href}
                 onClick={() => setSidebarOpen(false)}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
                   isActive
                     ? "bg-blue-50 text-blue-700"
                     : "text-gray-600 hover:bg-gray-100"
@@ -84,7 +84,7 @@ export default function DashboardLayout({
 
       {/* Main content */}
       <div className="lg:pl-64">
-        <header className="sticky top-0 z-30 flex items-center h-14 px-6 bg-white border-b border-gray-200">
+        <header className="sticky top-0 z-30 flex items-center h-14 px-6 bg-white/80 backdrop-blur-sm border-b border-gray-200 shadow-sm">
           <button
             className="lg:hidden mr-4"
             onClick={() => setSidebarOpen(true)}

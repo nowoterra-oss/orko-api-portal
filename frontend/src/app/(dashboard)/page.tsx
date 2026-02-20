@@ -70,11 +70,11 @@ export default function DashboardPage() {
         {cards.map((card) => (
           <div
             key={card.title}
-            className="bg-white rounded-xl border border-gray-200 p-6"
+            className="card p-6"
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500">{card.title}</p>
+                <p className="text-sm font-medium text-gray-500">{card.title}</p>
                 <p className="text-3xl font-bold mt-1">{card.value}</p>
               </div>
               <div className={`${card.color} p-3 rounded-lg`}>
@@ -87,7 +87,7 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Statü Dağılımı */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="card p-6">
           <h2 className="text-lg font-semibold mb-4">Statü Dağılımı</h2>
           <div className="space-y-3">
             {Object.entries(data.statusDistribution).map(([status, count]) => {
@@ -114,7 +114,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Son Aktiviteler */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="card p-6">
           <h2 className="text-lg font-semibold mb-4">Son Aktiviteler</h2>
           {data.recentActivities.length === 0 ? (
             <p className="text-sm text-gray-500">Henüz aktivite yok.</p>

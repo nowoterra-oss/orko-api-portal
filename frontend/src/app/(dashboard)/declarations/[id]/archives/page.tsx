@@ -106,9 +106,9 @@ export default function ArchivesPage() {
       </PageHeader>
 
       {/* Dosya Yükleme */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+      <div className="card p-6 mb-6">
         <h2 className="text-lg font-semibold mb-4">Dosya Yükle</h2>
-        <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+        <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-blue-50/50 hover:border-blue-300 transition-colors">
           <div className="flex flex-col items-center">
             <Upload className="h-8 w-8 text-gray-400 mb-2" />
             <p className="text-sm text-gray-500">
@@ -126,7 +126,7 @@ export default function ArchivesPage() {
       </div>
 
       {/* Arşiv Listesi */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="card overflow-hidden">
         {archives.length === 0 ? (
           <EmptyState title="Henüz arşiv yok" description="Yukarıdan dosya yükleyebilirsiniz." />
         ) : (

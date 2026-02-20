@@ -51,7 +51,7 @@ export default function WorkOrdersPage() {
       <PageHeader title="İş Emirleri" description="Selsil'den gelen iş emirleri listesi" />
 
       {/* Filtreler */}
-      <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6">
+      <div className="card p-4 mb-6">
         <div className="flex flex-wrap gap-4">
           {/* Arama */}
           <form onSubmit={handleSearch} className="flex-1 min-w-[200px]">
@@ -62,7 +62,7 @@ export default function WorkOrdersPage() {
                 placeholder="Dosya no veya Selsil ID ara..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="input-base pl-10"
               />
             </div>
           </form>
@@ -74,7 +74,7 @@ export default function WorkOrdersPage() {
               setStatusFilter(e.target.value);
               setPage(1);
             }}
-            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="input-base w-auto cursor-pointer"
           >
             <option value="">Tüm Statüler</option>
             <option value="Taslak">Taslak</option>
@@ -94,7 +94,7 @@ export default function WorkOrdersPage() {
               setTypeFilter(e.target.value);
               setPage(1);
             }}
-            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="input-base w-auto cursor-pointer"
           >
             <option value="">Tüm Tipler</option>
             <option value="Import">İthalat</option>
@@ -104,7 +104,7 @@ export default function WorkOrdersPage() {
       </div>
 
       {/* Tablo */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="card overflow-hidden">
         {loading ? (
           <LoadingSpinner />
         ) : !data || data.items.length === 0 ? (
@@ -183,14 +183,14 @@ export default function WorkOrdersPage() {
                 <button
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page === 1}
-                  className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 hover:bg-gray-50"
+                  className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 hover:bg-gray-50 transition-colors"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </button>
                 <button
                   onClick={() => setPage((p) => Math.min(data.totalPages, p + 1))}
                   disabled={page >= data.totalPages}
-                  className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 hover:bg-gray-50"
+                  className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 hover:bg-gray-50 transition-colors"
                 >
                   <ChevronRight className="h-4 w-4" />
                 </button>

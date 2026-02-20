@@ -1,0 +1,28 @@
+# Backend - .NET 9 API
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+WORKDIR /src
+
+# Copy solution and project files
+COPY Orko.Portal.sln ./
+COPY src/Orko.Portal.Api/Orko.Portal.Api.csproj src/Orko.Portal.Api/
+COPY src/Orko.Portal.Application/Orko.Portal.Application.csproj src/Orko.Portal.Application/
+COPY src/Orko.Portal.Domain/Orko.Portal.Domain.csproj src/Orko.Portal.Domain/
+COPY src/Orko.Portal.Infrastructure/Orko.Portal.Infrastructure.csproj src/Orko.Portal.Infrastructure/
+COPY src/Orko.Portal.Contracts/Orko.Portal.Contracts.csproj src/Orko.Portal.Contracts/
+
+RUN dotnet restore
+
+# Copy everything and build
+COPY src/ src/
+RUN dotnet publish src/Orko.Portal.Api/Orko.Portal.Api.csproj -c Release -o /app/publish --no-restore
+
+# Runtime image
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
+WORKDIR /app
+COPY --from=build /app/publish .
+
+ENV ASPNETCORE_URLS=http://+:5045
+ENV ASPNETCORE_ENVIRONMENT=Production
+
+EXPOSE 5045
+ENTRYPOINT ["dotnet", "Orko.Portal.Api.dll"]

@@ -79,13 +79,13 @@ export default function StatusUpdatePage() {
 
       <div className="max-w-2xl space-y-6">
         {/* Mevcut Statü */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="card p-6">
           <h2 className="text-sm text-gray-500 mb-2">Mevcut Statü</h2>
           <StatusBadge status={transitions.currentStatus} />
         </div>
 
         {/* Geçiş Seçenekleri */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="card p-6">
           <h2 className="text-lg font-semibold mb-4">Geçiş Yapılabilir Statüler</h2>
 
           {transitions.allowedTransitions.length === 0 ? (
@@ -101,7 +101,7 @@ export default function StatusUpdatePage() {
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
                   placeholder="Statü değişikliği ile ilgili not ekleyin..."
-                  className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="input-base mt-1"
                   rows={2}
                 />
               </div>
@@ -129,7 +129,7 @@ export default function StatusUpdatePage() {
 
         {/* Geçmiş */}
         {declaration.statusHistory.length > 0 && (
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <div className="card p-6">
             <h2 className="text-lg font-semibold mb-4">Geçmiş</h2>
             <div className="space-y-3">
               {declaration.statusHistory.map((sh) => (

@@ -90,31 +90,31 @@ export default function WorkOrderDetailPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           {/* İş Emri Kartı */}
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <div className="card p-6">
             <h2 className="text-lg font-semibold mb-4">İş Emri Bilgileri</h2>
             <dl className="grid grid-cols-2 gap-4">
               <div>
-                <dt className="text-xs text-gray-500">Dosya No</dt>
+                <dt className="text-xs font-medium text-gray-500">Dosya No</dt>
                 <dd className="text-sm font-medium">{wo.fileNumber}</dd>
               </div>
               <div>
-                <dt className="text-xs text-gray-500">Selsil ID</dt>
+                <dt className="text-xs font-medium text-gray-500">Selsil ID</dt>
                 <dd className="text-sm">{wo.selsilOrderId || "-"}</dd>
               </div>
               <div>
-                <dt className="text-xs text-gray-500">Tip</dt>
+                <dt className="text-xs font-medium text-gray-500">Tip</dt>
                 <dd><TypeBadge type={wo.type} /></dd>
               </div>
               <div>
-                <dt className="text-xs text-gray-500">Statü</dt>
+                <dt className="text-xs font-medium text-gray-500">Statü</dt>
                 <dd><StatusBadge status={wo.status} /></dd>
               </div>
               <div>
-                <dt className="text-xs text-gray-500">Oluşturulma</dt>
+                <dt className="text-xs font-medium text-gray-500">Oluşturulma</dt>
                 <dd className="text-sm">{formatDate(wo.createdAt)}</dd>
               </div>
               <div>
-                <dt className="text-xs text-gray-500">Son Güncelleme</dt>
+                <dt className="text-xs font-medium text-gray-500">Son Güncelleme</dt>
                 <dd className="text-sm">{formatDate(wo.updatedAt)}</dd>
               </div>
             </dl>
@@ -122,7 +122,7 @@ export default function WorkOrderDetailPage() {
 
           {/* Beyanname */}
           {declaration && (
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <div className="card p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold">Beyanname</h2>
                 {!declaration.sentToEvrim && (
@@ -138,11 +138,11 @@ export default function WorkOrderDetailPage() {
               </div>
               <dl className="grid grid-cols-2 gap-4 mb-4">
                 <div>
-                  <dt className="text-xs text-gray-500">Evrim ID</dt>
+                  <dt className="text-xs font-medium text-gray-500">Evrim ID</dt>
                   <dd className="text-sm font-mono">{declaration.evrimDeclarationId || "Henüz gönderilmedi"}</dd>
                 </div>
                 <div>
-                  <dt className="text-xs text-gray-500">Gönderim</dt>
+                  <dt className="text-xs font-medium text-gray-500">Gönderim</dt>
                   <dd className="text-sm">
                     {declaration.sentToEvrim
                       ? <span className="text-green-600">✓ {formatDate(declaration.sentAt!)}</span>
@@ -152,7 +152,7 @@ export default function WorkOrderDetailPage() {
               </dl>
               <div>
                 <div className="flex items-center justify-between mb-1">
-                <label className="text-xs text-gray-500">Beyanname Verileri</label>
+                <label className="text-xs font-medium text-gray-500">Beyanname Verileri</label>
                 <Link
                   href={`/declarations/${declaration.id}/edit`}
                   className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 font-medium"
@@ -172,7 +172,7 @@ export default function WorkOrderDetailPage() {
 
           {/* Statü Geçmişi */}
           {declaration && declaration.statusHistory.length > 0 && (
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <div className="card p-6">
               <h2 className="text-lg font-semibold mb-4">Statü Geçmişi</h2>
               <div className="space-y-4">
                 {declaration.statusHistory.map((sh) => (
@@ -200,24 +200,24 @@ export default function WorkOrderDetailPage() {
         {/* Sag panel */}
         <div className="space-y-6">
           {declaration && (
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <div className="card p-6">
               <h2 className="text-lg font-semibold mb-4">İşlemler</h2>
               <div className="space-y-2">
                 <Link href={`/declarations/${declaration.id}/status`}
-                  className="flex items-center gap-3 w-full px-4 py-3 text-sm border border-gray-200 rounded-lg hover:bg-gray-50">
+                  className="flex items-center gap-3 w-full px-4 py-3 text-sm border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-colors">
                   <Clock className="h-5 w-5 text-blue-500" />
-                  <div><p className="font-medium">Statü Güncelle</p><p className="text-xs text-gray-500">Manuel statü değişikliği</p></div>
+                  <div><p className="font-medium">Statü Güncelle</p><p className="text-xs font-medium text-gray-500">Manuel statü değişikliği</p></div>
                 </Link>
                 <Link href={`/declarations/${declaration.id}/archives`}
-                  className="flex items-center gap-3 w-full px-4 py-3 text-sm border border-gray-200 rounded-lg hover:bg-gray-50">
+                  className="flex items-center gap-3 w-full px-4 py-3 text-sm border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-colors">
                   <Archive className="h-5 w-5 text-purple-500" />
-                  <div><p className="font-medium">Arşiv Yönetimi</p><p className="text-xs text-gray-500">{declaration.archives.length} belge yüklü</p></div>
+                  <div><p className="font-medium">Arşiv Yönetimi</p><p className="text-xs font-medium text-gray-500">{declaration.archives.length} belge yüklü</p></div>
                 </Link>
               </div>
             </div>
           )}
           {declaration && declaration.archives.length > 0 && (
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <div className="card p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold">Arşivler</h2>
                 <Link href={`/declarations/${declaration.id}/archives`} className="text-xs text-blue-600 hover:underline flex items-center gap-1">
@@ -229,7 +229,7 @@ export default function WorkOrderDetailPage() {
                   <div key={a.id} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
                     <div className="min-w-0">
                       <p className="text-sm font-medium truncate">{a.fileName}</p>
-                      <p className="text-xs text-gray-500">{a.documentType || "Belge"}</p>
+                      <p className="text-xs font-medium text-gray-500">{a.documentType || "Belge"}</p>
                     </div>
                     {a.sentToEvrim ? <span className="text-xs text-green-600 shrink-0">✓</span> : <span className="text-xs text-gray-400 shrink-0">—</span>}
                   </div>
