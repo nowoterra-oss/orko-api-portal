@@ -34,10 +34,11 @@ Authorization: Bearer {{token}}
 {
   "refId": "ORK01",
   "dosyaTipi": "T",
+  "dosyaNo": "ORK-IMP-001",
   "referansNo": "ORK-2026-IMP-001",
   "musteriVergi": "1234567890",
   "musteriUnvani": "ABC Makine Sanayi A.S.",
-  "gumruk": 340100,
+  "gumruk": "340100",
   "rejimKodu": "4000",
   "ilkUlke": "DE",
   "sevkUlkesi": "DE",
@@ -47,15 +48,15 @@ Authorization: Bearer {{token}}
   "teslimYeri": "Istanbul",
   "konteyner": "1",
   "sinirdakiTasimaSekli": "10",
-  "toplamFatura": 125000,
+  "toplamFatura": 125000.0,
   "toplamFaturaDovizi": "EUR",
-  "toplamNavlun": 3500,
+  "toplamNavlun": 3500.0,
   "toplamNavlunDovizi": "EUR",
-  "toplamSigorta": 625,
+  "toplamSigorta": 625.0,
   "toplamSigortaDovizi": "EUR",
-  "toplamBrutAgirlik": 8500,
-  "toplamNetAgirlik": 7200,
-  "kapAdedi": 4,
+  "toplamBrutAgirlik": 8500.0,
+  "toplamNetAgirlik": 7200.0,
+  "kapAdedi": "4",
   "odemeSekli": "1",
   "bankaKodu": "0046",
   "beyanSahibiUnvan": "ABC Makine Sanayi A.S.",
@@ -66,43 +67,44 @@ Authorization: Bearer {{token}}
       "detayNo": 1,
       "gtipNo": "8458.11.20.00.00",
       "menseiUlke": "DE",
-      "brutAgirlik": 5000,
-      "netAgirlik": 4200,
-      "kalemFiyati": 85000,
+      "brutAgirlik": 5000.0,
+      "netAgirlik": 4200.0,
+      "kalemFiyati": 85000.0,
       "miktar": 1,
       "miktarBirimi": "C62",
       "doviz": "EUR",
       "ticariTanim": "CNC Yatay Torna Tezgahi",
       "faturaNo": "INV-2026-4521",
       "faturaTarihi": "2026-02-10",
-      "birimFiyat": 85000,
+      "birimFiyat": 85000.0,
       "kdvOrani": "20",
-      "navlunMiktari": 2000,
-      "sigortaMiktari": 425
+      "navlunMiktari": 2000.0,
+      "sigortaMiktari": 425.0
     },
     {
       "detayNo": 2,
       "gtipNo": "8466.93.50.00.00",
       "menseiUlke": "DE",
-      "brutAgirlik": 3500,
-      "netAgirlik": 3000,
-      "kalemFiyati": 40000,
+      "brutAgirlik": 3500.0,
+      "netAgirlik": 3000.0,
+      "kalemFiyati": 40000.0,
       "miktar": 2,
       "miktarBirimi": "C62",
       "doviz": "EUR",
       "ticariTanim": "CNC Tezgah Yedek Parca Seti",
       "faturaNo": "INV-2026-4521",
       "faturaTarihi": "2026-02-10",
-      "birimFiyat": 20000,
+      "birimFiyat": 20000.0,
       "kdvOrani": "20",
-      "navlunMiktari": 1500,
-      "sigortaMiktari": 200
+      "navlunMiktari": 1500.0,
+      "sigortaMiktari": 200.0
     }
   ]
 }
 
 ### 2b. Ithalat dosya bilgisi getir - Evrim dosya numarasi ile
-@importDosyaNo = BURAYA-EVRIM-DOSYA-NO-YAZIN
+### NOT: dosyaNo = POST /api/import'taki dosyaNo alani
+@importDosyaNo = ORK-IMP-001
 GET {{evrimBaseUrl}}/import?dosyaNo={{importDosyaNo}}
 Authorization: Bearer {{token}}
 
@@ -131,10 +133,11 @@ Authorization: Bearer {{token}}
 {
   "refId": "ORK01",
   "dosyaTipi": "H",
+  "dosyaNo": "ORK-EXP-001",
   "referansNo": "ORK-2026-EXP-001",
   "musteriVergi": "5678901234",
   "musteriUnvani": "XYZ Tekstil Ltd. Sti.",
-  "gumruk": 340300,
+  "gumruk": "340300",
   "rejimKodu": "1000",
   "gidecegiUlke": "GB",
   "sevkUlkesi": "TR",
@@ -142,11 +145,11 @@ Authorization: Bearer {{token}}
   "cikisUlkesi": "TR",
   "teslimSekli": "FOB",
   "teslimYeri": "Mersin",
-  "toplamFatura": 48500,
+  "toplamFatura": 48500.0,
   "toplamFaturaDovizi": "USD",
-  "toplamBrutAgirlik": 12000,
-  "toplamNetAgirlik": 11500,
-  "kapAdedi": 25,
+  "toplamBrutAgirlik": 12000.0,
+  "toplamNetAgirlik": 11500.0,
+  "kapAdedi": "25",
   "beyanSahibiUnvan": "XYZ Tekstil Ltd. Sti.",
   "beyanSahibiVergiNo": "5678901234",
   "musavirVergiNo": "9876543210",
@@ -155,9 +158,9 @@ Authorization: Bearer {{token}}
       "detayNo": 1,
       "gtipNo": "5209.42.00.00.00",
       "menseiUlke": "TR",
-      "brutAgirlik": 12000,
-      "netAgirlik": 11500,
-      "kalemFiyati": 48500,
+      "brutAgirlik": 12000.0,
+      "netAgirlik": 11500.0,
+      "kalemFiyati": 48500.0,
       "miktar": 25000,
       "miktarBirimi": "MTR",
       "doviz": "USD",
@@ -171,7 +174,7 @@ Authorization: Bearer {{token}}
 }
 
 ### 3b. Ihracat dosya bilgisi getir - Evrim dosya numarasi ile
-@exportDosyaNo = BURAYA-EVRIM-DOSYA-NO-YAZIN
+@exportDosyaNo = ORK-EXP-001
 GET {{evrimBaseUrl}}/export?dosyaNo={{exportDosyaNo}}
 Authorization: Bearer {{token}}
 
@@ -214,12 +217,13 @@ Authorization: Bearer {{token}}
 {
   "refId": "ORK01",
   "dosyaTipi": "T",
+  "dosyaNo": "ORK-RSV-001",
   "referansNo": "ORK-2026-RSV-001",
   "musteriVergi": "1234567890",
   "musteriUnvani": "ABC Makine Sanayi A.S.",
-  "gumruk": 340100,
+  "gumruk": "340100",
   "rejimKodu": "4000",
-  "toplamFatura": 50000,
+  "toplamFatura": 50000.0,
   "toplamFaturaDovizi": "EUR"
 }
 
@@ -334,7 +338,8 @@ Authorization: Bearer {{token}}
 ### ============================================================
 
 ### 9a. Arsiv dosyasi getir (tek PDF)
-@evrimBeyannameId = BURAYA-EVRIM-BEYANNAME-ID-YAZIN
+### NOT: id = Evrim'den donen evrimReferansNo (integer)
+@evrimBeyannameId = 11079
 GET {{evrimBaseUrl}}/archive?id={{evrimBeyannameId}}
 Authorization: Bearer {{token}}
 
@@ -349,7 +354,8 @@ GET {{evrimBaseUrl}}/declaration-image?id={{declarationImageId}}&dosya={{declara
 Authorization: Bearer {{token}}
 
 ### 10b. Beyanname kontrol (dosya kontrol baslat)
-@evrimDosyaNoKontrol = BURAYA-EVRIM-DOSYA-NO-YAZIN
+### NOT: beyannameId = Evrim'den donen evrimReferansNo (integer)
+@evrimDosyaNoKontrol = 11079
 GET {{evrimBaseUrl}}/beyanname-kontrol?beyannameId={{evrimDosyaNoKontrol}}
 Authorization: Bearer {{token}}
 

@@ -41,8 +41,21 @@ export default function WorkOrderDetailPage() {
     load();
   }, [fileNumber]);
 
+  const isDeclarationDataValid = (() => {
+    if (!declaration?.declarationData) return false;
+    try {
+      const parsed = JSON.parse(declaration.declarationData);
+      return !!(parsed.gumruk && parsed.musteriVergi && parsed.kalemler?.length > 0);
+    } catch { return false; }
+  })();
+
   const handleSendToEvrim = async () => {
     if (!declaration?.id || sending) return;
+    if (!isDeclarationDataValid) {
+      alert("Beyanname verileri eksik. Lütfen önce formu doldurun.");
+      router.push(`/declarations/${declaration.id}/edit`);
+      return;
+    }
     if (!confirm("Beyannameyi Evrim'e göndermek istediğinize emin misiniz?")) return;
     setSending(true);
     try {
@@ -115,7 +128,7 @@ export default function WorkOrderDetailPage() {
                 {!declaration.sentToEvrim && (
                   <button
                     onClick={handleSendToEvrim}
-                    disabled={sending || !declaration.declarationData}
+                    disabled={sending || !isDeclarationDataValid}
                     className="flex items-center gap-1 px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
                   >
                     <Send className="h-4 w-4" />

@@ -1,3 +1,4 @@
+using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
@@ -57,7 +58,34 @@ public class SendToEvrimHandler
 
         // Referans numarasini her zaman set et
         evrimRequest.ReferansNo ??= declaration.WorkOrder.FileNumber;
-        evrimRequest.Ihracat = declaration.DeclarationType == DeclarationType.Export;
+        evrimRequest.DosyaNo ??= declaration.WorkOrder.FileNumber;
+
+        // ihracat sadece export ise true olarak gonder, import ise null birak (json'dan exclude edilir)
+        if (declaration.DeclarationType == DeclarationType.Export)
+            evrimRequest.Ihracat = true;
+        else
+            evrimRequest.Ihracat = null;
+
+        // Bos stringleri null yap (WhenWritingNull ile json'dan exclude edilsinler)
+        CleanEmptyStrings(evrimRequest);
+        if (evrimRequest.Kalemler != null)
+        {
+            foreach (var kalem in evrimRequest.Kalemler)
+                CleanEmptyStrings(kalem);
+        }
+
+        // Zorunlu alan kontrolu
+        var missingFields = new List<string>();
+        if (string.IsNullOrEmpty(evrimRequest.DosyaNo)) missingFields.Add("dosyaNo");
+        if (string.IsNullOrEmpty(evrimRequest.Gumruk)) missingFields.Add("gumruk");
+        if (string.IsNullOrEmpty(evrimRequest.MusteriVergi)) missingFields.Add("musteriVergi");
+        if (string.IsNullOrEmpty(evrimRequest.MusteriUnvani)) missingFields.Add("musteriUnvani");
+        if (evrimRequest.ToplamFatura is null or 0) missingFields.Add("toplamFatura");
+        if (evrimRequest.Kalemler == null || evrimRequest.Kalemler.Count == 0) missingFields.Add("kalemler");
+
+        if (missingFields.Count > 0)
+            throw new InvalidOperationException(
+                $"Beyanname verileri eksik. Lutfen formu doldurun. Eksik alanlar: {string.Join(", ", missingFields)}");
 
         // Evrim'e gonder (tip'e gore import/export)
         EvrimResponse result;
@@ -101,5 +129,21 @@ public class SendToEvrimHandler
             declaration.WorkOrder.FileNumber, result.Success, result.EvrimReferansNo, result.ExceptionMessage);
 
         return result;
+    }
+
+    /// <summary>
+    /// Bos string property'leri null yapar, WhenWritingNull ile json'dan exclude edilir
+    /// </summary>
+    private static void CleanEmptyStrings(object obj)
+    {
+        foreach (var prop in obj.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
+        {
+            if (prop.PropertyType == typeof(string) && prop.CanRead && prop.CanWrite)
+            {
+                var val = (string?)prop.GetValue(obj);
+                if (string.IsNullOrWhiteSpace(val))
+                    prop.SetValue(obj, null);
+            }
+        }
     }
 }

@@ -1,6 +1,5 @@
 using Hangfire;
 using Microsoft.EntityFrameworkCore;
-using Polly;
 using Orko.Portal.Api.Endpoints;
 using Orko.Portal.Api.Middleware;
 using Orko.Portal.Application.Archives;
@@ -37,12 +36,8 @@ builder.Services.AddHangfireServer();
 builder.Services.AddHttpClient<IEvrimApiClient, EvrimApiClient>(client =>
 {
     client.BaseAddress = new Uri(builder.Configuration["Evrim:BaseUrl"] ?? "https://api.evrim.com/EvrimEntRestWS.dll/");
-    client.Timeout = TimeSpan.FromSeconds(30);
-})
-.AddTransientHttpErrorPolicy(p =>
-    p.WaitAndRetryAsync(3, attempt => TimeSpan.FromSeconds(Math.Pow(2, attempt))))
-.AddTransientHttpErrorPolicy(p =>
-    p.CircuitBreakerAsync(5, TimeSpan.FromSeconds(30)));
+    client.Timeout = TimeSpan.FromSeconds(120);
+});
 
 // --- Application Services ---
 builder.Services.AddScoped<CreateWorkOrderHandler>();

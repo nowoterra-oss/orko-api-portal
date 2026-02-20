@@ -40,7 +40,7 @@ export default function DashboardLayout({
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 transform transition-transform lg:translate-x-0 lg:static lg:z-auto",
+          "fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 transform transition-transform lg:translate-x-0",
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
@@ -84,14 +84,13 @@ export default function DashboardLayout({
 
       {/* Main content */}
       <div className="lg:pl-64">
-        <header className="sticky top-0 z-30 flex items-center h-16 px-6 bg-white border-b border-gray-200">
+        <header className="sticky top-0 z-30 flex items-center h-14 px-6 bg-white border-b border-gray-200">
           <button
             className="lg:hidden mr-4"
             onClick={() => setSidebarOpen(true)}
           >
             <Menu className="h-5 w-5" />
           </button>
-          <div className="flex-1" />
           <span className="text-sm text-gray-500">Gümrük Beyanname Yönetimi</span>
         </header>
 

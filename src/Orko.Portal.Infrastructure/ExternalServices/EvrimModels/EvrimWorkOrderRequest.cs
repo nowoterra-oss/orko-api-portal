@@ -29,7 +29,7 @@ public class EvrimWorkOrderRequest
     public string? Gumruk { get; set; }  // max 15
 
     [JsonPropertyName("kapAdedi")]
-    public int? KapAdedi { get; set; }
+    public string? KapAdedi { get; set; }  // Evrim string bekler
 
     [JsonPropertyName("yurtDisiMusteri")]
     public string? YurtDisiMusteri { get; set; }  // VKN max 11

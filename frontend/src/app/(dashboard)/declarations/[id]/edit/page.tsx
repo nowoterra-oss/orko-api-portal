@@ -6,7 +6,7 @@ import { declarationService } from "@/services/declarationService";
 import { DeclarationDetail } from "@/lib/types";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
-import { ArrowLeft, Save, Send, Plus, Trash2, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowLeft, Save, Send, Plus, Trash2, ChevronDown, ChevronUp, FlaskConical } from "lucide-react";
 
 // =====================
 // TYPES
@@ -40,7 +40,7 @@ interface DeclarationFormData {
   dosyaTipi?: string;
   dosyaNo?: string;
   referansNo?: string;
-  ihracat: boolean;
+  ihracat?: boolean;
   olusturanKullanici?: string;
   dosyaTarihi?: string;
   // Musteri
@@ -49,7 +49,7 @@ interface DeclarationFormData {
   musteriAccountNumber?: string;
   // Beyanname
   rejimKodu?: string;
-  gumruk?: number;
+  gumruk?: string;
   basitlestirilmisUsul?: string;
   // Ulke
   ilkUlke?: string;
@@ -112,7 +112,6 @@ const emptyKalem: DeclarationKalem = {
 };
 
 const defaultForm: DeclarationFormData = {
-  ihracat: false,
   kalemler: [],
 };
 
@@ -328,6 +327,97 @@ export default function DeclarationEditPage() {
     }
   };
 
+  const fillTestData = () => {
+    if (!declaration) return;
+    const isExport = declaration.declarationType === "Export";
+    const fileNumber = declaration.fileNumber || "ORK-TEST";
+    const today = new Date().toISOString().slice(0, 10);
+
+    if (isExport) {
+      setForm({
+        refId: "ORK01",
+        dosyaTipi: "H",
+        dosyaNo: fileNumber,
+        referansNo: fileNumber,
+        ihracat: true,
+        musteriVergi: "5678901234",
+        musteriUnvani: "XYZ Tekstil Ltd. Sti.",
+        rejimKodu: "1000",
+        gumruk: "340300",
+        gidecegiUlke: "GB",
+        sevkUlkesi: "TR",
+        ticaretUlkesi: "GB",
+        cikisUlkesi: "TR",
+        teslimSekli: "FOB",
+        teslimYeri: "Mersin",
+        toplamFatura: 48500,
+        toplamFaturaDovizi: "USD",
+        toplamBrutAgirlik: 12000,
+        toplamNetAgirlik: 11500,
+        kapAdedi: "25",
+        beyanSahibiUnvan: "XYZ Tekstil Ltd. Sti.",
+        beyanSahibiVergiNo: "5678901234",
+        musavirVergiNo: "9876543210",
+        kalemler: [
+          {
+            detayNo: 1,
+            gtipNo: "5209.42.00.00.00",
+            menseiUlke: "TR",
+            brutAgirlik: 12000,
+            netAgirlik: 11500,
+            kalemFiyati: 48500,
+            miktar: 25000,
+            miktarBirimi: "MTR",
+            doviz: "USD",
+            ticariTanim: "Pamuklu denim kumas, indigo boyali",
+            faturaNo: "EXP-2026-089",
+            faturaTarihi: today,
+            birimFiyat: 1.94,
+            kdvOrani: "0",
+          },
+        ],
+      });
+    } else {
+      // Basarili curl testiyle birebir ayni minimal veri
+      setForm({
+        refId: "ORK01",
+        dosyaTipi: "T",
+        dosyaNo: fileNumber,
+        referansNo: fileNumber,
+        musteriVergi: "1234567890",
+        musteriUnvani: "Test Firma A.S.",
+        rejimKodu: "4000",
+        gumruk: "340100",
+        ilkUlke: "DE",
+        sevkUlkesi: "DE",
+        ticaretUlkesi: "DE",
+        varisUlkesi: "TR",
+        teslimSekli: "CIF",
+        teslimYeri: "Istanbul",
+        toplamFatura: 10000.0,
+        toplamFaturaDovizi: "EUR",
+        toplamBrutAgirlik: 500.0,
+        toplamNetAgirlik: 400.0,
+        kapAdedi: "1",
+        kalemler: [
+          {
+            detayNo: 1,
+            gtipNo: "8458.11.20.00.00",
+            menseiUlke: "DE",
+            brutAgirlik: 500.0,
+            netAgirlik: 400.0,
+            kalemFiyati: 10000.0,
+            miktar: 1,
+            miktarBirimi: "C62",
+            doviz: "EUR",
+            ticariTanim: "Test Urun",
+            birimFiyat: 10000.0,
+          },
+        ],
+      });
+    }
+  };
+
   const isReadOnly = declaration?.sentToEvrim || false;
 
   if (loading) return <LoadingSpinner />;
@@ -364,7 +454,7 @@ export default function DeclarationEditPage() {
         <TextInput value={form.rejimKodu} onChange={(v) => updateForm("rejimKodu", v)} disabled={isReadOnly} maxLength={4} placeholder="Ör: 4000" />
       </FormField>
       <FormField label="Gümrük Kodu">
-        <NumberInput value={form.gumruk} onChange={(v) => updateForm("gumruk", v)} disabled={isReadOnly} placeholder="Ör: 590300" />
+        <TextInput value={form.gumruk} onChange={(v) => updateForm("gumruk", v)} disabled={isReadOnly} maxLength={10} placeholder="Ör: 340100" />
       </FormField>
       <FormField label="Dosya Tarihi">
         <input type="datetime-local" value={form.dosyaTarihi?.slice(0, 16) || ""} onChange={(e) => updateForm("dosyaTarihi", e.target.value ? e.target.value + ":00" : undefined)} disabled={isReadOnly} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100" />
@@ -598,6 +688,11 @@ export default function DeclarationEditPage() {
         </button>
         {!isReadOnly && (
           <div className="flex gap-2">
+            {process.env.NODE_ENV === "development" && (
+              <button onClick={fillTestData} className="flex items-center gap-1.5 px-4 py-2 bg-amber-500 text-white text-sm rounded-lg hover:bg-amber-600 transition-colors">
+                <FlaskConical className="w-4 h-4" /> Test Verisi Doldur
+              </button>
+            )}
             <button onClick={handleSave} disabled={saving} className="flex items-center gap-1.5 px-4 py-2 bg-gray-800 text-white text-sm rounded-lg hover:bg-gray-900 transition-colors disabled:opacity-50">
               <Save className="w-4 h-4" /> {saving ? "Kaydediliyor..." : "Kaydet"}
             </button>

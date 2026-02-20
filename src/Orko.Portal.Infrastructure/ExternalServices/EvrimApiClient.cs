@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using System.Net.Http.Headers;
-using System.Net.Http.Json;
+using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -15,6 +15,11 @@ public class EvrimApiClient : IEvrimApiClient
     private readonly ILogger<EvrimApiClient> _logger;
     private string? _cachedToken;
     private DateTime _tokenExpiry = DateTime.MinValue;
+
+    private static readonly JsonSerializerOptions _jsonOptions = new()
+    {
+        DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+    };
 
     public EvrimApiClient(HttpClient http, IConfiguration config, ILogger<EvrimApiClient> logger)
     {
@@ -84,7 +89,8 @@ public class EvrimApiClient : IEvrimApiClient
     private async Task<EvrimResponse> SendAsync(string endpoint, object request, string operationType)
     {
         var sw = Stopwatch.StartNew();
-        var requestJson = JsonSerializer.Serialize(request);
+        // Runtime type ile serialize et (object type sorununu onlemek icin)
+        var requestJson = JsonSerializer.Serialize(request, request.GetType(), _jsonOptions);
 
         try
         {
@@ -97,7 +103,9 @@ public class EvrimApiClient : IEvrimApiClient
                 "Evrim {Operation}: {Endpoint} | Request: {Request}",
                 operationType, endpoint, requestJson);
 
-            var response = await _http.PostAsJsonAsync(endpoint, request);
+            // StringContent olarak gonder (PostAsJsonAsync object serialization sorununu onlemek icin)
+            var content = new StringContent(requestJson, Encoding.UTF8, "application/json");
+            var response = await _http.PostAsync(endpoint, content);
             var responseBody = await response.Content.ReadAsStringAsync();
             sw.Stop();
 
@@ -116,7 +124,8 @@ public class EvrimApiClient : IEvrimApiClient
                 _http.DefaultRequestHeaders.Authorization =
                     new AuthenticationHeaderValue("Bearer", token);
 
-                response = await _http.PostAsJsonAsync(endpoint, request);
+                var retryContent = new StringContent(requestJson, Encoding.UTF8, "application/json");
+                response = await _http.PostAsync(endpoint, retryContent);
                 responseBody = await response.Content.ReadAsStringAsync();
             }
 

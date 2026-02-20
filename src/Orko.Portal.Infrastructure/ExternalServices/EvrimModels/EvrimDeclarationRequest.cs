@@ -21,7 +21,7 @@ public class EvrimDeclarationRequest
     public string? ReferansNo { get; set; }  // Firma referansi (max 100)
 
     [JsonPropertyName("ihracat")]
-    public bool Ihracat { get; set; }
+    public bool? Ihracat { get; set; }
 
     [JsonPropertyName("olusturanKullanici")]
     public string? OlusturanKullanici { get; set; }
@@ -44,7 +44,7 @@ public class EvrimDeclarationRequest
     public string? RejimKodu { get; set; }  // Orn: 4000
 
     [JsonPropertyName("gumruk")]
-    public int? Gumruk { get; set; }  // Gumruk kodu Orn: 590300
+    public string? Gumruk { get; set; }  // Gumruk kodu Orn: "590300" (Evrim string bekler)
 
     [JsonPropertyName("basitlestirilmisUsul")]
     public string? BasitlestirilmisUsul { get; set; }
