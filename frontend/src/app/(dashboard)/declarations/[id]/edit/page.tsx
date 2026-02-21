@@ -6,7 +6,8 @@ import { declarationService } from "@/services/declarationService";
 import { DeclarationDetail } from "@/lib/types";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
-import { ArrowLeft, Save, Send, Plus, Trash2, ChevronDown, ChevronUp, FlaskConical } from "lucide-react";
+import { ArrowLeft, Save, Send, Plus, Trash2, ChevronDown, ChevronUp, FlaskConical, Upload } from "lucide-react";
+import { useRef } from "react";
 
 // =====================
 // TYPES
@@ -243,6 +244,8 @@ export default function DeclarationEditPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [sending, setSending] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     declarationService.get(id).then((d) => {
@@ -324,6 +327,41 @@ export default function DeclarationEditPage() {
       alert("Gönderim hatası: " + (err.message || "Bilinmeyen hata"));
     } finally {
       setSending(false);
+    }
+  };
+
+  const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Reset input so same file can be re-selected
+    e.target.value = "";
+
+    const ext = file.name.split(".").pop()?.toLowerCase();
+    if (ext !== "json" && ext !== "xml") {
+      alert("Desteklenmeyen dosya formatı. Lütfen .json veya .xml dosyası seçin.");
+      return;
+    }
+
+    const fileFormat = ext as "json" | "xml";
+
+    if (!confirm(`"${file.name}" dosyasını Evrim'e göndermek istediğinize emin misiniz?\nBu işlem geri alınamaz.`))
+      return;
+
+    setUploading(true);
+    try {
+      const fileContent = await file.text();
+      const result = await declarationService.uploadAndSend(id, fileContent, fileFormat);
+      if (result.success) {
+        alert("Dosyadan yüklendi ve Evrim'e başarıyla gönderildi!");
+        router.push(`/work-orders/${declaration?.fileNumber}`);
+      } else {
+        alert("Evrim hatası: " + result.message);
+      }
+    } catch (err: any) {
+      alert("Yükleme hatası: " + (err.message || "Bilinmeyen hata"));
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -698,6 +736,16 @@ export default function DeclarationEditPage() {
             </button>
             <button onClick={handleSendToEvrim} disabled={sending} className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 text-white text-sm rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50">
               <Send className="w-4 h-4" /> {sending ? "Gönderiliyor..." : "Evrim'e Gönder"}
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".json,.xml"
+              onChange={handleFileSelected}
+              className="hidden"
+            />
+            <button onClick={() => fileInputRef.current?.click()} disabled={uploading} className="flex items-center gap-1.5 px-4 py-2 bg-violet-600 text-white text-sm rounded-lg hover:bg-violet-700 transition-colors disabled:opacity-50">
+              <Upload className="w-4 h-4" /> {uploading ? "Yükleniyor..." : "Dosyadan Yükle ve Gönder"}
             </button>
           </div>
         )}

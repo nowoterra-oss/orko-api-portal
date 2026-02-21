@@ -60,5 +60,29 @@ public static class DeclarationEndpoints
             }
         })
         .WithName("SendToEvrim");
+
+        // Dosyadan yukle ve Evrim'e gonder
+        group.MapPost("/{id:guid}/upload-and-send", async (Guid id, UploadAndSendDto dto, UploadAndSendHandler handler) =>
+        {
+            try
+            {
+                var result = await handler.HandleAsync(id, dto);
+                return result.Success
+                    ? Results.Ok(ApiResponse<object>.Ok(
+                        new { EvrimDeclarationId = result.DeclarationId },
+                        "Dosyadan yuklendi ve Evrim'e basariyla gonderildi."))
+                    : Results.BadRequest(ApiResponse<object>.Fail(
+                        $"Evrim gonderilemedi: {result.Message}"));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return Results.NotFound(ApiResponse<object>.Fail(ex.Message));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Results.BadRequest(ApiResponse<object>.Fail(ex.Message));
+            }
+        })
+        .WithName("UploadAndSendToEvrim");
     }
 }

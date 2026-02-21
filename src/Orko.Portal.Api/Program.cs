@@ -45,6 +45,7 @@ builder.Services.AddScoped<GetWorkOrdersHandler>();
 builder.Services.AddScoped<GetDeclarationHandler>();
 builder.Services.AddScoped<UpdateDeclarationHandler>();
 builder.Services.AddScoped<SendToEvrimHandler>();
+builder.Services.AddScoped<UploadAndSendHandler>();
 builder.Services.AddScoped<UpdateStatusHandler>();
 builder.Services.AddScoped<UploadArchiveHandler>();
 builder.Services.AddScoped<DashboardHandler>();
