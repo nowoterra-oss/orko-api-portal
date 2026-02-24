@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { workOrderService } from "@/services/workOrderService";
@@ -11,7 +11,7 @@ import { StatusBadge } from "@/components/shared/StatusBadge";
 import { TypeBadge } from "@/components/shared/TypeBadge";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { formatDate } from "@/lib/utils";
-import { ArrowLeft, FileEdit, Send, Clock, Archive, ExternalLink } from "lucide-react";
+import { ArrowLeft, FileEdit, Send, Clock, Archive, ExternalLink, Upload } from "lucide-react";
 
 export default function WorkOrderDetailPage() {
   const params = useParams();
@@ -22,6 +22,8 @@ export default function WorkOrderDetailPage() {
   const [declaration, setDeclaration] = useState<DeclarationDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -70,6 +72,37 @@ export default function WorkOrderDetailPage() {
       alert(err.response?.data?.message || "Gönderim hatası");
     } finally {
       setSending(false);
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !declaration?.id) return;
+    e.target.value = "";
+
+    const ext = file.name.split(".").pop()?.toLowerCase();
+    if (ext !== "json" && ext !== "xml") {
+      alert("Desteklenmeyen dosya formatı. Lütfen .json veya .xml dosyası seçin.");
+      return;
+    }
+
+    if (!confirm(`"${file.name}" dosyasını Evrim'e göndermek istediğinize emin misiniz?\nBu işlem geri alınamaz.`))
+      return;
+
+    setUploading(true);
+    try {
+      const fileContent = await file.text();
+      const result = await declarationService.uploadAndSend(declaration.id, fileContent, ext as "json" | "xml");
+      if (result.success) {
+        alert("Dosyadan yüklendi ve Evrim'e başarıyla gönderildi!");
+        window.location.reload();
+      } else {
+        alert("Evrim hatası: " + result.message);
+      }
+    } catch (err: any) {
+      alert("Yükleme hatası: " + (err.response?.data?.message || err.message || "Bilinmeyen hata"));
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -213,6 +246,28 @@ export default function WorkOrderDetailPage() {
                   <Archive className="h-5 w-5 text-purple-500" />
                   <div><p className="font-medium">Arşiv Yönetimi</p><p className="text-xs font-medium text-gray-500">{declaration.archives.length} belge yüklü</p></div>
                 </Link>
+                {!declaration.sentToEvrim && (
+                  <>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".json,.xml"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                    />
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploading}
+                      className="flex items-center gap-3 w-full px-4 py-3 text-sm border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-colors disabled:opacity-50"
+                    >
+                      <Upload className="h-5 w-5 text-violet-500" />
+                      <div className="text-left">
+                        <p className="font-medium">{uploading ? "Yükleniyor..." : "Dosyadan Beyanname Yükle"}</p>
+                        <p className="text-xs font-medium text-gray-500">JSON veya XML dosyası ile gönder</p>
+                      </div>
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           )}
