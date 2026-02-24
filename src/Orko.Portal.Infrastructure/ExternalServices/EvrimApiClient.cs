@@ -3,8 +3,11 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Orko.Portal.Domain.Entities;
 using Orko.Portal.Domain.Interfaces;
+using Orko.Portal.Infrastructure.Persistence;
 
 namespace Orko.Portal.Infrastructure.ExternalServices;
 
@@ -13,6 +16,7 @@ public class EvrimApiClient : IEvrimApiClient
     private readonly HttpClient _http;
     private readonly IConfiguration _config;
     private readonly ILogger<EvrimApiClient> _logger;
+    private readonly IServiceScopeFactory _scopeFactory;
     private string? _cachedToken;
     private DateTime _tokenExpiry = DateTime.MinValue;
 
@@ -21,11 +25,12 @@ public class EvrimApiClient : IEvrimApiClient
         DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
     };
 
-    public EvrimApiClient(HttpClient http, IConfiguration config, ILogger<EvrimApiClient> logger)
+    public EvrimApiClient(HttpClient http, IConfiguration config, ILogger<EvrimApiClient> logger, IServiceScopeFactory scopeFactory)
     {
         _http = http;
         _config = config;
         _logger = logger;
+        _scopeFactory = scopeFactory;
     }
 
     /// <summary>
@@ -129,6 +134,10 @@ public class EvrimApiClient : IEvrimApiClient
                 responseBody = await response.Content.ReadAsStringAsync();
             }
 
+            // DB'ye OUTGOING log kaydet
+            await SaveApiLogAsync(endpoint, "POST", requestJson, responseBody,
+                (int)response.StatusCode, (int)sw.ElapsedMilliseconds);
+
             if (!response.IsSuccessStatusCode)
             {
                 return new EvrimResponse
@@ -155,11 +164,44 @@ public class EvrimApiClient : IEvrimApiClient
                 "Evrim {Operation} hatasi: {Endpoint} | {Duration}ms | Hata: {Error}",
                 operationType, endpoint, sw.ElapsedMilliseconds, ex.Message);
 
+            // Hata durumunda da logla
+            await SaveApiLogAsync(endpoint, "POST", requestJson, ex.Message,
+                0, (int)sw.ElapsedMilliseconds);
+
             return new EvrimResponse
             {
                 Success = false,
                 ExceptionMessage = $"Evrim baglanti hatasi: {ex.Message}"
             };
+        }
+    }
+
+    private async Task SaveApiLogAsync(string endpoint, string method,
+        string? requestBody, string? responseBody, int statusCode, int durationMs)
+    {
+        try
+        {
+            using var scope = _scopeFactory.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<PortalDbContext>();
+
+            db.ApiLogs.Add(new ApiLog
+            {
+                Direction = "OUTGOING",
+                Endpoint = $"evrim:{endpoint}",
+                Method = method,
+                RequestBody = requestBody?.Length > 10000 ? requestBody[..10000] + "...[truncated]" : requestBody,
+                ResponseBody = responseBody?.Length > 10000 ? responseBody[..10000] + "...[truncated]" : responseBody,
+                StatusCode = statusCode,
+                DurationMs = durationMs,
+                CreatedAt = DateTime.UtcNow,
+                UserName = "System/Evrim"
+            });
+
+            await db.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Evrim OUTGOING API log kaydedilemedi.");
         }
     }
 }
