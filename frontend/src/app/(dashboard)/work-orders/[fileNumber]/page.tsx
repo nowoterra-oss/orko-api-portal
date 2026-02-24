@@ -86,18 +86,14 @@ export default function WorkOrderDetailPage() {
       return;
     }
 
-    if (!confirm(`"${file.name}" dosyasını Evrim'e göndermek istediğinize emin misiniz?\nBu işlem geri alınamaz.`))
-      return;
-
     setUploading(true);
     try {
       const fileContent = await file.text();
-      const result = await declarationService.uploadAndSend(declaration.id, fileContent, ext as "json" | "xml");
+      const result = await declarationService.parseFile(declaration.id, fileContent, ext as "json" | "xml");
       if (result.success) {
-        alert("Dosyadan yüklendi ve Evrim'e başarıyla gönderildi!");
-        window.location.reload();
+        router.push(`/declarations/${declaration.id}/edit`);
       } else {
-        alert("Evrim hatası: " + result.message);
+        alert("Parse hatası: " + result.message);
       }
     } catch (err: any) {
       alert("Yükleme hatası: " + (err.response?.data?.message || err.message || "Bilinmeyen hata"));
@@ -263,7 +259,7 @@ export default function WorkOrderDetailPage() {
                       <Upload className="h-5 w-5 text-violet-500" />
                       <div className="text-left">
                         <p className="font-medium">{uploading ? "Yükleniyor..." : "Dosyadan Beyanname Yükle"}</p>
-                        <p className="text-xs font-medium text-gray-500">JSON veya XML dosyası ile gönder</p>
+                        <p className="text-xs font-medium text-gray-500">JSON veya XML dosyası yükle ve kontrol et</p>
                       </div>
                     </button>
                   </>

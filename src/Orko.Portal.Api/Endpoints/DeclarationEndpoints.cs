@@ -61,7 +61,26 @@ public static class DeclarationEndpoints
         })
         .WithName("SendToEvrim");
 
-        // Dosyadan yukle ve Evrim'e gonder
+        // Dosyadan yukle (parse edip kaydet, Evrim'e gonderme)
+        group.MapPost("/{id:guid}/parse-file", async (Guid id, UploadAndSendDto dto, UploadAndSendHandler handler) =>
+        {
+            try
+            {
+                var result = await handler.HandleParseOnlyAsync(id, dto);
+                return Results.Ok(ApiResponse<object>.Ok(result, "Dosya basariyla yuklendi."));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return Results.NotFound(ApiResponse<object>.Fail(ex.Message));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Results.BadRequest(ApiResponse<object>.Fail(ex.Message));
+            }
+        })
+        .WithName("ParseFile");
+
+        // Dosyadan yukle ve Evrim'e gonder (eski uyumluluk)
         group.MapPost("/{id:guid}/upload-and-send", async (Guid id, UploadAndSendDto dto, UploadAndSendHandler handler) =>
         {
             try

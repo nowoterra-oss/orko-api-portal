@@ -24,6 +24,14 @@ export const declarationService = {
     return data;
   },
 
+  parseFile: async (id: string, fileContent: string, fileFormat: "json" | "xml") => {
+    const { data } = await api.post<ApiResponse<Record<string, unknown>>>(
+      `/declarations/${id}/parse-file`,
+      { fileContent, fileFormat }
+    );
+    return data;
+  },
+
   uploadAndSend: async (id: string, fileContent: string, fileFormat: "json" | "xml") => {
     const { data } = await api.post<ApiResponse<{ evrimDeclarationId: string }>>(
       `/declarations/${id}/upload-and-send`,

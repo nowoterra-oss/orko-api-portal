@@ -348,21 +348,24 @@ export default function DeclarationEditPage() {
 
     const fileFormat = ext as "json" | "xml";
 
-    if (!confirm(`"${file.name}" dosyasını Evrim'e göndermek istediğinize emin misiniz?\nBu işlem geri alınamaz.`))
-      return;
-
     setUploading(true);
     try {
       const fileContent = await file.text();
-      const result = await declarationService.uploadAndSend(id, fileContent, fileFormat);
-      if (result.success) {
-        alert("Dosyadan yüklendi ve Evrim'e başarıyla gönderildi!");
-        router.push(`/work-orders/${declaration?.fileNumber}`);
+      const result = await declarationService.parseFile(id, fileContent, fileFormat);
+      if (result.success && result.data) {
+        const parsed = result.data as Record<string, any>;
+        setForm({
+          ...defaultForm,
+          ...parsed,
+          kalemler: parsed.kalemler || [],
+        });
+        setActiveTab("genel");
+        alert("Dosya başarıyla yüklendi! Lütfen verileri kontrol edip 'Evrim'e Gönder' butonunu kullanın.");
       } else {
-        alert("Evrim hatası: " + result.message);
+        alert("Parse hatası: " + result.message);
       }
     } catch (err: any) {
-      alert("Yükleme hatası: " + (err.message || "Bilinmeyen hata"));
+      alert("Yükleme hatası: " + (err.response?.data?.message || err.message || "Bilinmeyen hata"));
     } finally {
       setUploading(false);
     }
@@ -748,7 +751,7 @@ export default function DeclarationEditPage() {
               className="hidden"
             />
             <button onClick={() => fileInputRef.current?.click()} disabled={uploading} className="flex items-center gap-1.5 px-4 py-2 bg-violet-600 text-white text-sm rounded-lg hover:bg-violet-700 transition-colors disabled:opacity-50">
-              <Upload className="w-4 h-4" /> {uploading ? "Yükleniyor..." : "Dosyadan Yükle ve Gönder"}
+              <Upload className="w-4 h-4" /> {uploading ? "Yükleniyor..." : "Dosyadan Yükle"}
             </button>
           </div>
         )}
