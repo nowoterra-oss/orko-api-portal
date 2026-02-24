@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Orko.Portal.Api.Extensions;
 using Orko.Portal.Domain.Entities;
 using Orko.Portal.Infrastructure.Persistence;
 
@@ -53,7 +54,7 @@ public class RequestLoggingMiddleware
         // DB'ye logla
         try
         {
-            db.ApiLogs.Add(new ApiLog
+            var log = new ApiLog
             {
                 Direction = "INCOMING",
                 Endpoint = context.Request.Path,
@@ -63,7 +64,18 @@ public class RequestLoggingMiddleware
                 StatusCode = context.Response.StatusCode,
                 DurationMs = (int)sw.ElapsedMilliseconds,
                 CreatedAt = DateTime.UtcNow
-            });
+            };
+
+            if (context.User.Identity?.IsAuthenticated == true)
+            {
+                var userId = context.GetUserId();
+                log.UserId = userId != Guid.Empty ? userId : null;
+                log.UserName = context.GetUserName();
+                log.UserEmail = context.GetUserEmail();
+                log.UserRole = context.GetUserRole();
+            }
+
+            db.ApiLogs.Add(log);
             await db.SaveChangesAsync();
         }
         catch (Exception ex)

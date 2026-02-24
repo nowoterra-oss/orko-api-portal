@@ -10,6 +10,10 @@ export interface ApiLog {
   statusCode: number;
   durationMs: number;
   createdAt: string;
+  userId?: string;
+  userName?: string;
+  userEmail?: string;
+  userRole?: string;
 }
 
 interface LogPagedResult {

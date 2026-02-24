@@ -26,5 +26,14 @@ public class ApiLogConfiguration : IEntityTypeConfiguration<ApiLog>
             .HasMaxLength(10);
 
         builder.HasIndex(x => x.CreatedAt);
+
+        builder.Property(x => x.UserName)
+            .HasMaxLength(200);
+
+        builder.Property(x => x.UserEmail)
+            .HasMaxLength(255);
+
+        builder.Property(x => x.UserRole)
+            .HasMaxLength(50);
     }
 }

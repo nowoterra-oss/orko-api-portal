@@ -11,4 +11,10 @@ public class ApiLog
     public int StatusCode { get; set; }
     public int DurationMs { get; set; }
     public DateTime CreatedAt { get; set; }
+
+    // Kullanıcı bilgileri (nullable - anonim istekler için)
+    public Guid? UserId { get; set; }
+    public string? UserName { get; set; }
+    public string? UserEmail { get; set; }
+    public string? UserRole { get; set; }
 }

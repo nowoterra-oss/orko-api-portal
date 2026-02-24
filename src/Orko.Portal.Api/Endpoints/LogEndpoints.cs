@@ -32,7 +32,11 @@ public static class LogEndpoints
                     l.ResponseBody,
                     l.StatusCode,
                     l.DurationMs,
-                    l.CreatedAt
+                    l.CreatedAt,
+                    l.UserId,
+                    l.UserName,
+                    l.UserEmail,
+                    l.UserRole
                 })
                 .ToListAsync();
 
