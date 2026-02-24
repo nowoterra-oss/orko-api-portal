@@ -7,6 +7,72 @@
   @apiKey = selsil-test-api-key-2026
 
   ### ============================================================
+  ### 0. KIMLIK DOGRULAMA (AUTH)
+  ### ============================================================
+
+  ### 0a. Setup durumu kontrol (public)
+  GET {{baseUrl}}/auth/setup-status
+  Content-Type: application/json
+
+  ### 0b. Ilk admin olustur (sadece kullanici yokken calisir)
+  POST {{baseUrl}}/auth/setup
+  Content-Type: application/json
+
+  {
+    "email": "admin@orko.com",
+    "fullName": "Admin User",
+    "password": "Admin123!"
+  }
+
+  ### 0c. Giris yap
+  # @name login
+  POST {{baseUrl}}/auth/login
+  Content-Type: application/json
+
+  {
+    "email": "admin@orko.com",
+    "password": "Admin123!"
+  }
+
+  ### 0d. Mevcut kullanici bilgisi
+  GET {{baseUrl}}/auth/me
+  Authorization: Bearer {{login.response.body.data.token}}
+  Content-Type: application/json
+
+  ### 0e. Kullanici listesi (Admin only)
+  GET {{baseUrl}}/users
+  Authorization: Bearer {{login.response.body.data.token}}
+  Content-Type: application/json
+
+  ### 0f. Yeni operator kullanici olustur (Admin only)
+  POST {{baseUrl}}/users
+  Authorization: Bearer {{login.response.body.data.token}}
+  Content-Type: application/json
+
+  {
+    "email": "operator@orko.com",
+    "fullName": "Operator User",
+    "password": "Operator123!",
+    "role": "Operator"
+  }
+
+  ### 0g. Yeni viewer kullanici olustur (Admin only)
+  POST {{baseUrl}}/users
+  Authorization: Bearer {{login.response.body.data.token}}
+  Content-Type: application/json
+
+  {
+    "email": "viewer@orko.com",
+    "fullName": "Viewer User",
+    "password": "Viewer123!",
+    "role": "Viewer"
+  }
+
+  ### 0h. Token olmadan korunmus endpoint'e erisim (401 donmeli)
+  GET {{baseUrl}}/dashboard/summary
+  Content-Type: application/json
+
+  ### ============================================================
   ### 1. DASHBOARD
   ### ============================================================
 
@@ -71,20 +137,24 @@
 
   ### 2e. Is emri listesi
   GET {{baseUrl}}/work-orders?page=1&pageSize=20
+  Authorization: Bearer {{login.response.body.data.token}}
   Content-Type: application/json
 
   ### 2f. Is emri listesi - filtreli
   GET {{baseUrl}}/work-orders?status=Taslak&type=Import&page=1&pageSize=10
+  Authorization: Bearer {{login.response.body.data.token}}
   Content-Type: application/json
 
   ### 2g. Is emri listesi - arama
   GET {{baseUrl}}/work-orders?search=SEL-2026
+  Authorization: Bearer {{login.response.body.data.token}}
   Content-Type: application/json
 
   ### 2h. Is emri detay (fileNumber ile)
   # NOT: Asagidaki fileNumber'i 2a'dan donen sonuca gore degistirin
   @fileNumber = ORK-20260218-0001
   GET {{baseUrl}}/work-orders/{{fileNumber}}
+  Authorization: Bearer {{login.response.body.data.token}}
   Content-Type: application/json
 
   ### ============================================================
@@ -95,10 +165,12 @@
   # NOT: declarationId'yi 2h'den donen response'daki declaration.id'den alin
   @declarationId = BURAYA-DECLARATION-ID-YAZIN
   GET {{baseUrl}}/declarations/{{declarationId}}
+  Authorization: Bearer {{login.response.body.data.token}}
   Content-Type: application/json
 
   ### 3b. Beyanname guncelle - Ithalat ornegi (Evrim Declaration formati)
   PUT {{baseUrl}}/declarations/{{declarationId}}
+  Authorization: Bearer {{login.response.body.data.token}}
   Content-Type: application/json
 
   {
@@ -109,6 +181,7 @@
   # NOT: Ihracat is emrinin declaration ID'sini yazin
   @exportDeclarationId = BURAYA-EXPORT-DECLARATION-ID-YAZIN
   PUT {{baseUrl}}/declarations/{{exportDeclarationId}}
+  Authorization: Bearer {{login.response.body.data.token}}
   Content-Type: application/json
 
   {
@@ -118,6 +191,7 @@
   ### 3d. Evrim'e gonder
   # NOT: Evrim credential'lari appsettings.json'da tanimli olmalidir
   POST {{baseUrl}}/declarations/{{declarationId}}/send
+  Authorization: Bearer {{login.response.body.data.token}}
   Content-Type: application/json
 
   ### ============================================================
@@ -126,10 +200,12 @@
 
   ### 4a. Gecerli statu gecisleri
   GET {{baseUrl}}/declarations/{{declarationId}}/status/transitions
+  Authorization: Bearer {{login.response.body.data.token}}
   Content-Type: application/json
 
   ### 4b. Statuyu "Hazirlaniyor" yap
   PUT {{baseUrl}}/declarations/{{declarationId}}/status
+  Authorization: Bearer {{login.response.body.data.token}}
   Content-Type: application/json
 
   {
@@ -139,6 +215,7 @@
 
   ### 4c. Statuyu "OnayBekliyor" yap
   PUT {{baseUrl}}/declarations/{{declarationId}}/status
+  Authorization: Bearer {{login.response.body.data.token}}
   Content-Type: application/json
 
   {
@@ -148,6 +225,7 @@
 
   ### 4d. Statuyu "EvrimeGonderildi" yap
   PUT {{baseUrl}}/declarations/{{declarationId}}/status
+  Authorization: Bearer {{login.response.body.data.token}}
   Content-Type: application/json
 
   {
@@ -161,10 +239,12 @@
 
   ### 5a. Arsiv listesi
   GET {{baseUrl}}/declarations/{{declarationId}}/archives
+  Authorization: Bearer {{login.response.body.data.token}}
   Content-Type: application/json
 
   ### 5b. Arsiv yukle (Base64 ornek - kucuk test PDF)
   POST {{baseUrl}}/declarations/{{declarationId}}/archives
+  Authorization: Bearer {{login.response.body.data.token}}
   Content-Type: application/json
 
   {
@@ -176,6 +256,7 @@
 
   ### 5c. Ikinci arsiv yukle
   POST {{baseUrl}}/declarations/{{declarationId}}/archives
+  Authorization: Bearer {{login.response.body.data.token}}
   Content-Type: application/json
 
   {
@@ -189,6 +270,7 @@
   # NOT: archiveId'yi 5b response'undan alin
   @archiveId = BURAYA-ARCHIVE-ID-YAZIN
   POST {{baseUrl}}/declarations/{{declarationId}}/archives/{{archiveId}}/send
+  Authorization: Bearer {{login.response.body.data.token}}
   Content-Type: application/json
 
   ### ============================================================
@@ -197,10 +279,12 @@
 
   ### 6a. Log listesi
   GET {{baseUrl}}/logs?page=1&pageSize=30
+  Authorization: Bearer {{login.response.body.data.token}}
   Content-Type: application/json
 
   ### 6b. Log listesi - sayfalama
   GET {{baseUrl}}/logs?page=2&pageSize=10
+  Authorization: Bearer {{login.response.body.data.token}}
   Content-Type: application/json
 
   ### ============================================================
@@ -230,10 +314,12 @@
 
   ### 8a. Olmayan is emri
   GET {{baseUrl}}/work-orders/ORK-YANLISDOSYA-0000
+  Authorization: Bearer {{login.response.body.data.token}}
   Content-Type: application/json
 
   ### 8b. Olmayan beyanname
   GET {{baseUrl}}/declarations/00000000-0000-0000-0000-000000000000
+  Authorization: Bearer {{login.response.body.data.token}}
   Content-Type: application/json
 
   ### 8c. Bos beyanname Evrim'e gondermeye calis
@@ -242,6 +328,7 @@
 
   ### 8d. Gecersiz statu gecisi
   PUT {{baseUrl}}/declarations/{{declarationId}}/status
+  Authorization: Bearer {{login.response.body.data.token}}
   Content-Type: application/json
 
   {

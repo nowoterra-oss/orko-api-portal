@@ -3,9 +3,11 @@ using Microsoft.EntityFrameworkCore;
 using Orko.Portal.Api.Endpoints;
 using Orko.Portal.Api.Middleware;
 using Orko.Portal.Application.Archives;
+using Orko.Portal.Application.Auth;
 using Orko.Portal.Application.Dashboard;
 using Orko.Portal.Application.Declarations;
 using Orko.Portal.Application.Statuses;
+using Orko.Portal.Application.Users;
 using Orko.Portal.Application.WorkOrders;
 using Orko.Portal.Domain.Interfaces;
 using Orko.Portal.Infrastructure.ExternalServices;
@@ -39,6 +41,11 @@ builder.Services.AddHttpClient<IEvrimApiClient, EvrimApiClient>(client =>
     client.Timeout = TimeSpan.FromSeconds(120);
 });
 
+// --- Auth Services ---
+builder.Services.AddSingleton<JwtTokenService>();
+builder.Services.AddScoped<AuthHandler>();
+builder.Services.AddScoped<UserManagementHandler>();
+
 // --- Application Services ---
 builder.Services.AddScoped<CreateWorkOrderHandler>();
 builder.Services.AddScoped<GetWorkOrdersHandler>();
@@ -62,12 +69,28 @@ builder.Services.AddSwaggerGen(c =>
         In = ParameterLocation.Header,
         Description = "API Key (X-API-Key header)"
     });
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "JWT Bearer token"
+    });
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
             new OpenApiSecurityScheme
             {
                 Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "ApiKey" }
+            },
+            Array.Empty<string>()
+        },
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
             },
             Array.Empty<string>()
         }
@@ -96,9 +119,12 @@ app.UseSwagger();
 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Orko Portal API v1"));
 
 app.UseMiddleware<ApiKeyAuthMiddleware>();
+app.UseMiddleware<JwtAuthMiddleware>();
 app.UseMiddleware<RequestLoggingMiddleware>();
 
 // --- Endpoints ---
+app.MapAuthEndpoints();
+app.MapUserEndpoints();
 app.MapWorkOrderEndpoints();
 app.MapDeclarationEndpoints();
 app.MapStatusEndpoints();

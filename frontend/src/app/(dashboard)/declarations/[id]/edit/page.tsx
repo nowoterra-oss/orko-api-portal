@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { declarationService } from "@/services/declarationService";
 import { DeclarationDetail } from "@/lib/types";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { ArrowLeft, Save, Send, Plus, Trash2, ChevronDown, ChevronUp, FlaskConical, Upload } from "lucide-react";
-import { useRef } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { hasFeature } from "@/lib/permissions";
 
 // =====================
 // TYPES
@@ -237,6 +238,8 @@ export default function DeclarationEditPage() {
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
+  const { user } = useAuth();
+  const canEdit = user ? hasFeature(user.role, "declaration:edit") : false;
 
   const [declaration, setDeclaration] = useState<DeclarationDetail | null>(null);
   const [form, setForm] = useState<DeclarationFormData>(defaultForm);
@@ -456,7 +459,7 @@ export default function DeclarationEditPage() {
     }
   };
 
-  const isReadOnly = declaration?.sentToEvrim || false;
+  const isReadOnly = declaration?.sentToEvrim || !canEdit;
 
   if (loading) return <LoadingSpinner />;
   if (!declaration) return <div className="p-8 text-center text-gray-500">Beyanname bulunamadı.</div>;

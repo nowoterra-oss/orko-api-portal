@@ -1,3 +1,4 @@
+using Orko.Portal.Api.Extensions;
 using Orko.Portal.Application.Statuses;
 using Orko.Portal.Contracts.Common;
 using Orko.Portal.Contracts.Statuses;
@@ -21,11 +22,12 @@ public static class StatusEndpoints
         .WithName("GetAllowedTransitions");
 
         // Statu guncelle (manuel)
-        group.MapPut("/", async (Guid id, UpdateStatusDto dto, UpdateStatusHandler handler) =>
+        group.MapPut("/", async (Guid id, UpdateStatusDto dto, HttpContext context, UpdateStatusHandler handler) =>
         {
             try
             {
-                var result = await handler.HandleAsync(id, dto, "dashboard-user");
+                var userName = context.GetUserName();
+                var result = await handler.HandleAsync(id, dto, string.IsNullOrEmpty(userName) ? "dashboard-user" : userName);
                 return Results.Ok(ApiResponse<StatusHistoryDto>.Ok(result, "Statu guncellendi."));
             }
             catch (KeyNotFoundException ex)

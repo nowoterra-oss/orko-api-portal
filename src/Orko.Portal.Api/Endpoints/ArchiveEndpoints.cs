@@ -1,3 +1,4 @@
+using Orko.Portal.Api.Extensions;
 using Orko.Portal.Application.Archives;
 using Orko.Portal.Contracts.Archives;
 using Orko.Portal.Contracts.Common;
@@ -19,11 +20,12 @@ public static class ArchiveEndpoints
         .WithName("ListArchives");
 
         // Arsiv yukle
-        group.MapPost("/", async (Guid declarationId, UploadArchiveDto dto, UploadArchiveHandler handler) =>
+        group.MapPost("/", async (Guid declarationId, UploadArchiveDto dto, HttpContext context, UploadArchiveHandler handler) =>
         {
             try
             {
-                var result = await handler.HandleAsync(declarationId, dto, "dashboard-user");
+                var userName = context.GetUserName();
+                var result = await handler.HandleAsync(declarationId, dto, string.IsNullOrEmpty(userName) ? "dashboard-user" : userName);
                 return Results.Created($"/api/declarations/{declarationId}/archives/{result.Id}",
                     ApiResponse<ArchiveDto>.Ok(result, "Arsiv yuklendi."));
             }

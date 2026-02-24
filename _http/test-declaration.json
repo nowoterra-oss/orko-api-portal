@@ -1,0 +1,36 @@
+{
+  "refId": "ORK01",
+  "dosyaTipi": "T",
+  "dosyaNo": "ORK-20260221-0001",
+  "referansNo": "ORK-20260221-0001",
+  "musteriVergi": "1234567890",
+  "musteriUnvani": "Test Firma A.S.",
+  "rejimKodu": "4000",
+  "gumruk": "340100",
+  "ilkUlke": "DE",
+  "sevkUlkesi": "DE",
+  "ticaretUlkesi": "DE",
+  "varisUlkesi": "TR",
+  "teslimSekli": "CIF",
+  "teslimYeri": "Istanbul",
+  "toplamFatura": 10000.0,
+  "toplamFaturaDovizi": "EUR",
+  "toplamBrutAgirlik": 500.0,
+  "toplamNetAgirlik": 400.0,
+  "kapAdedi": "1",
+  "kalemler": [
+    {
+      "detayNo": 1,
+      "gtipNo": "8458.11.20.00.00",
+      "menseiUlke": "DE",
+      "brutAgirlik": 500.0,
+      "netAgirlik": 400.0,
+      "kalemFiyati": 10000.0,
+      "miktar": 1,
+      "miktarBirimi": "C62",
+      "doviz": "EUR",
+      "ticariTanim": "Test Urun - Dosyadan Yuklendi",
+      "birimFiyat": 10000.0
+    }
+  ]
+}
