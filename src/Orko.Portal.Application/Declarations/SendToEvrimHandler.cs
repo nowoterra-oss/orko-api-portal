@@ -56,8 +56,8 @@ public class SendToEvrimHandler
             };
         }
 
-        // Referans numarasini her zaman set et
-        evrimRequest.ReferansNo ??= declaration.WorkOrder.FileNumber;
+        // Referans numarasi: Selsil referansi, yoksa dosya numarasi
+        evrimRequest.ReferansNo ??= declaration.WorkOrder.SelsilOrderId ?? declaration.WorkOrder.FileNumber;
         evrimRequest.DosyaNo ??= declaration.WorkOrder.FileNumber;
 
         // ihracat sadece export ise true olarak gonder, import ise null birak (json'dan exclude edilir)
@@ -76,7 +76,8 @@ public class SendToEvrimHandler
 
         // Zorunlu alan kontrolu
         var missingFields = new List<string>();
-        if (string.IsNullOrEmpty(evrimRequest.DosyaNo)) missingFields.Add("dosyaNo");
+        if (string.IsNullOrEmpty(evrimRequest.DosyaNo)) missingFields.Add("dosyaNo (Beyanname No)");
+        if (string.IsNullOrEmpty(evrimRequest.DosyaTarihi)) missingFields.Add("dosyaTarihi (Beyanname Tarihi)");
         if (string.IsNullOrEmpty(evrimRequest.Gumruk)) missingFields.Add("gumruk");
         if (string.IsNullOrEmpty(evrimRequest.MusteriVergi)) missingFields.Add("musteriVergi");
         if (string.IsNullOrEmpty(evrimRequest.MusteriUnvani)) missingFields.Add("musteriUnvani");
