@@ -54,12 +54,12 @@ export default function WorkOrdersPage() {
       <div className="card p-4 mb-6">
         <div className="flex flex-wrap gap-4">
           {/* Arama */}
-          <form onSubmit={handleSearch} className="flex-1 min-w-[200px]">
+          <form onSubmit={handleSearch} className="flex-[2] min-w-[300px]">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
                 type="text"
-                placeholder="Dosya no veya Selsil ID ara..."
+                placeholder="Dosya no, Selsil ID veya müşteri adı ara..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="input-base pl-10"

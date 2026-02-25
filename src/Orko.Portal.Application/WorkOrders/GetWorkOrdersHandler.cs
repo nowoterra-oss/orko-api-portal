@@ -29,7 +29,8 @@ public class GetWorkOrdersHandler
         if (!string.IsNullOrEmpty(search))
             query = query.Where(w =>
                 w.FileNumber.Contains(search) ||
-                (w.SelsilOrderId != null && w.SelsilOrderId.Contains(search)));
+                (w.SelsilOrderId != null && w.SelsilOrderId.Contains(search)) ||
+                (w.SelsilPayload != null && w.SelsilPayload.Contains(search)));
 
         var totalCount = await query.CountAsync();
 
