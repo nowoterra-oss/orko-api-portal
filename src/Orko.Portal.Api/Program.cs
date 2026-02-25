@@ -118,9 +118,9 @@ app.UseCors("Frontend");
 app.UseSwagger();
 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Orko Portal API v1"));
 
+app.UseMiddleware<RequestLoggingMiddleware>();
 app.UseMiddleware<ApiKeyAuthMiddleware>();
 app.UseMiddleware<JwtAuthMiddleware>();
-app.UseMiddleware<RequestLoggingMiddleware>();
 
 // --- Endpoints ---
 app.MapAuthEndpoints();
