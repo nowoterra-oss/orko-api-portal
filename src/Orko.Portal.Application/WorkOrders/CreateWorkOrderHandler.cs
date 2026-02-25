@@ -68,7 +68,14 @@ public class CreateWorkOrderHandler
             Type = dto.Type,
             Status = WorkOrderStatus.Taslak.ToString(),
             CreatedAt = workOrder.CreatedAt,
-            UpdatedAt = workOrder.UpdatedAt
+            UpdatedAt = workOrder.UpdatedAt,
+            Declaration = new Contracts.Declarations.DeclarationSummaryDto
+            {
+                Id = declaration.Id,
+                DeclarationType = declaration.DeclarationType.ToString(),
+                Status = declaration.Status.ToString(),
+                SentToEvrim = false
+            }
         };
     }
 }
