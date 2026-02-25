@@ -145,7 +145,10 @@ app.MapDashboardEndpoints();
 app.MapLogEndpoints();
 app.MapSettingsEndpoints();
 
-app.MapHangfireDashboard("/hangfire");
+app.MapHangfireDashboard("/hangfire", new Hangfire.DashboardOptions
+{
+    Authorization = [new Orko.Portal.Api.Filters.HangfireAuthFilter()]
+});
 
 // --- Health Check ---
 app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }))
