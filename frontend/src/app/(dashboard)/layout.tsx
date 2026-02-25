@@ -7,6 +7,7 @@ import {
   FileText,
   ClipboardList,
   Users,
+  Settings,
   Menu,
   X,
   LogOut,
@@ -21,6 +22,7 @@ const allNavigation = [
   { name: "İş Emirleri", href: "/work-orders", icon: ClipboardList, roles: ["Admin", "Operator", "Viewer"] },
   { name: "Loglar", href: "/logs", icon: FileText, roles: ["Admin", "Operator"] },
   { name: "Kullanıcılar", href: "/users", icon: Users, roles: ["Admin"] },
+  { name: "Ayarlar", href: "/settings", icon: Settings, roles: ["Admin"] },
 ];
 
 export default function DashboardLayout({

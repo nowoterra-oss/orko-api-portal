@@ -9,7 +9,12 @@ using Orko.Portal.Application.Declarations;
 using Orko.Portal.Application.Statuses;
 using Orko.Portal.Application.Users;
 using Orko.Portal.Application.WorkOrders;
+using Orko.Portal.Application.Settings;
+using Orko.Portal.Domain.Constants;
+using Orko.Portal.Domain.Entities;
 using Orko.Portal.Domain.Interfaces;
+using Orko.Portal.Infrastructure.BackgroundJobs;
+using Orko.Portal.Infrastructure.Email;
 using Orko.Portal.Infrastructure.ExternalServices;
 using Orko.Portal.Infrastructure.Persistence;
 using Microsoft.OpenApi.Models;
@@ -49,7 +54,11 @@ builder.Services.AddSingleton<JwtTokenService>();
 builder.Services.AddScoped<AuthHandler>();
 builder.Services.AddScoped<UserManagementHandler>();
 
+// --- Email Service ---
+builder.Services.AddScoped<IEmailService, SmtpEmailService>();
+
 // --- Application Services ---
+builder.Services.AddScoped<SettingsHandler>();
 builder.Services.AddScoped<CreateWorkOrderHandler>();
 builder.Services.AddScoped<GetWorkOrdersHandler>();
 builder.Services.AddScoped<GetDeclarationHandler>();
@@ -134,6 +143,7 @@ app.MapStatusEndpoints();
 app.MapArchiveEndpoints();
 app.MapDashboardEndpoints();
 app.MapLogEndpoints();
+app.MapSettingsEndpoints();
 
 app.MapHangfireDashboard("/hangfire");
 
@@ -147,6 +157,80 @@ if (app.Environment.IsDevelopment())
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<PortalDbContext>();
     await db.Database.MigrateAsync();
+}
+
+// --- Seed AppSettings & Register Recurring Jobs ---
+{
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<PortalDbContext>();
+
+    try
+    {
+        var hasSettings = await db.AppSettings.AnyAsync();
+        if (!hasSettings)
+        {
+            var now = DateTime.UtcNow;
+            var defaults = new[]
+            {
+                // SMTP
+                new { Key = SettingKeys.SmtpHost, Value = "", Desc = "SMTP sunucu adresi", Cat = SettingKeys.CategorySmtp },
+                new { Key = SettingKeys.SmtpPort, Value = "587", Desc = "SMTP port numarasi", Cat = SettingKeys.CategorySmtp },
+                new { Key = SettingKeys.SmtpUsername, Value = "", Desc = "SMTP kullanici adi", Cat = SettingKeys.CategorySmtp },
+                new { Key = SettingKeys.SmtpPassword, Value = "", Desc = "SMTP sifresi", Cat = SettingKeys.CategorySmtp },
+                new { Key = SettingKeys.SmtpFromAddress, Value = "", Desc = "Gonderen e-posta adresi", Cat = SettingKeys.CategorySmtp },
+                new { Key = SettingKeys.SmtpFromName, Value = "Orko Portal", Desc = "Gonderen adi", Cat = SettingKeys.CategorySmtp },
+                new { Key = SettingKeys.SmtpEnableSsl, Value = "true", Desc = "SSL kullan", Cat = SettingKeys.CategorySmtp },
+                // WorkOrderEmail
+                new { Key = SettingKeys.WorkOrderEmailEnabled, Value = "false", Desc = "Is emri e-posta bildirimi aktif", Cat = SettingKeys.CategoryWorkOrderEmail },
+                new { Key = SettingKeys.WorkOrderEmailRecipients, Value = "", Desc = "Alicilar (virgul ile ayrilmis)", Cat = SettingKeys.CategoryWorkOrderEmail },
+                new { Key = SettingKeys.WorkOrderEmailSubject, Value = "Yeni Is Emri: {FileNumber}", Desc = "E-posta konusu", Cat = SettingKeys.CategoryWorkOrderEmail },
+                new { Key = SettingKeys.WorkOrderEmailTemplate, Value = "", Desc = "E-posta HTML sablonu", Cat = SettingKeys.CategoryWorkOrderEmail },
+                // Reminder
+                new { Key = SettingKeys.ReminderEnabled, Value = "false", Desc = "Hatirlatma servisi aktif", Cat = SettingKeys.CategoryReminder },
+                new { Key = SettingKeys.ReminderCronExpression, Value = "0 9 * * 1-5", Desc = "Cron ifadesi (varsayilan: hafta ici 09:00)", Cat = SettingKeys.CategoryReminder },
+                new { Key = SettingKeys.ReminderRecipients, Value = "", Desc = "Alicilar (virgul ile ayrilmis)", Cat = SettingKeys.CategoryReminder },
+                new { Key = SettingKeys.ReminderDraftThresholdHours, Value = "24", Desc = "Taslak esik suresi (saat)", Cat = SettingKeys.CategoryReminder },
+                new { Key = SettingKeys.ReminderSubject, Value = "Taslak Is Emirleri Hatirlatmasi ({Count} adet)", Desc = "E-posta konusu", Cat = SettingKeys.CategoryReminder },
+                new { Key = SettingKeys.ReminderTemplate, Value = "", Desc = "E-posta HTML sablonu", Cat = SettingKeys.CategoryReminder },
+            };
+
+            foreach (var d in defaults)
+            {
+                db.AppSettings.Add(new AppSetting
+                {
+                    Key = d.Key,
+                    Value = d.Value,
+                    Description = d.Desc,
+                    Category = d.Cat,
+                    UpdatedAt = now,
+                    UpdatedBy = "System"
+                });
+            }
+            await db.SaveChangesAsync();
+            Log.Information("AppSettings varsayilan degerler olusturuldu.");
+        }
+
+        // Reminder recurring job: enabled ise kaydet
+        var reminderEnabled = await db.AppSettings
+            .FirstOrDefaultAsync(s => s.Key == SettingKeys.ReminderEnabled);
+        var reminderCron = await db.AppSettings
+            .FirstOrDefaultAsync(s => s.Key == SettingKeys.ReminderCronExpression);
+
+        if (reminderEnabled?.Value?.Equals("true", StringComparison.OrdinalIgnoreCase) == true
+            && !string.IsNullOrEmpty(reminderCron?.Value))
+        {
+            var recurringJobs = scope.ServiceProvider.GetRequiredService<IRecurringJobManager>();
+            recurringJobs.AddOrUpdate<DraftReminderJob>(
+                "draft-reminder",
+                job => job.ExecuteAsync(),
+                reminderCron.Value);
+            Log.Information("Hatirlatma recurring job kaydedildi: {Cron}", reminderCron.Value);
+        }
+    }
+    catch (Exception ex)
+    {
+        Log.Warning(ex, "AppSettings seed sirasinda hata (tablo henuz olusturulmamis olabilir)");
+    }
 }
 
 app.Run();

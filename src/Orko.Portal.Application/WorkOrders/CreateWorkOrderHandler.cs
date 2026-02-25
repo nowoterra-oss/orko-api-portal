@@ -1,8 +1,10 @@
+using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Orko.Portal.Contracts.WorkOrders;
 using Orko.Portal.Domain.Entities;
 using Orko.Portal.Domain.Enums;
+using Orko.Portal.Infrastructure.BackgroundJobs;
 using Orko.Portal.Infrastructure.Persistence;
 
 namespace Orko.Portal.Application.WorkOrders;
@@ -10,11 +12,13 @@ namespace Orko.Portal.Application.WorkOrders;
 public class CreateWorkOrderHandler
 {
     private readonly PortalDbContext _db;
+    private readonly IBackgroundJobClient _jobs;
     private readonly ILogger<CreateWorkOrderHandler> _logger;
 
-    public CreateWorkOrderHandler(PortalDbContext db, ILogger<CreateWorkOrderHandler> logger)
+    public CreateWorkOrderHandler(PortalDbContext db, IBackgroundJobClient jobs, ILogger<CreateWorkOrderHandler> logger)
     {
         _db = db;
+        _jobs = jobs;
         _logger = logger;
     }
 
@@ -59,6 +63,9 @@ public class CreateWorkOrderHandler
         await _db.SaveChangesAsync();
 
         _logger.LogInformation("Is emri olusturuldu: {FileNumber}, Tip: {Type}", fileNumber, dto.Type);
+
+        // E-posta bildirimi gonder (arka planda)
+        _jobs.Enqueue<WorkOrderEmailNotificationJob>(job => job.ExecuteAsync(workOrder.Id));
 
         return new WorkOrderResponseDto
         {

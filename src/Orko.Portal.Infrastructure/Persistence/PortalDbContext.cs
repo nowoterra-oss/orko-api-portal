@@ -13,6 +13,7 @@ public class PortalDbContext : DbContext
     public DbSet<StatusHistory> StatusHistories => Set<StatusHistory>();
     public DbSet<User> Users => Set<User>();
     public DbSet<ApiLog> ApiLogs => Set<ApiLog>();
+    public DbSet<AppSetting> AppSettings => Set<AppSetting>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

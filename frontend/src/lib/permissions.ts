@@ -1,6 +1,6 @@
 // Role-based page access
 const ROLE_PAGES: Record<string, string[]> = {
-  Admin: ["/", "/work-orders", "/logs", "/users"],
+  Admin: ["/", "/work-orders", "/logs", "/users", "/settings"],
   Operator: ["/", "/work-orders", "/logs"],
   Viewer: ["/", "/work-orders"],
 };
