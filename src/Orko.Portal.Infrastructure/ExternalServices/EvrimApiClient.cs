@@ -1,7 +1,10 @@
 using System.Diagnostics;
+using System.IdentityModel.Tokens.Jwt;
 using System.Net.Http.Headers;
+using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -17,6 +20,7 @@ public class EvrimApiClient : IEvrimApiClient
     private readonly IConfiguration _config;
     private readonly ILogger<EvrimApiClient> _logger;
     private readonly IServiceScopeFactory _scopeFactory;
+    private readonly IHttpContextAccessor _httpContextAccessor;
     private string? _cachedToken;
     private DateTime _tokenExpiry = DateTime.MinValue;
 
@@ -25,12 +29,13 @@ public class EvrimApiClient : IEvrimApiClient
         DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
     };
 
-    public EvrimApiClient(HttpClient http, IConfiguration config, ILogger<EvrimApiClient> logger, IServiceScopeFactory scopeFactory)
+    public EvrimApiClient(HttpClient http, IConfiguration config, ILogger<EvrimApiClient> logger, IServiceScopeFactory scopeFactory, IHttpContextAccessor httpContextAccessor)
     {
         _http = http;
         _config = config;
         _logger = logger;
         _scopeFactory = scopeFactory;
+        _httpContextAccessor = httpContextAccessor;
     }
 
     /// <summary>
@@ -184,7 +189,7 @@ public class EvrimApiClient : IEvrimApiClient
             using var scope = _scopeFactory.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<PortalDbContext>();
 
-            db.ApiLogs.Add(new ApiLog
+            var log = new ApiLog
             {
                 Direction = "OUTGOING",
                 Endpoint = $"evrim:{endpoint}",
@@ -193,10 +198,22 @@ public class EvrimApiClient : IEvrimApiClient
                 ResponseBody = responseBody?.Length > 10000 ? responseBody[..10000] + "...[truncated]" : responseBody,
                 StatusCode = statusCode,
                 DurationMs = durationMs,
-                CreatedAt = DateTime.UtcNow,
-                UserName = "System/Evrim"
-            });
+                CreatedAt = DateTime.UtcNow
+            };
 
+            // HttpContext'ten kullanıcı bilgisini al
+            var user = _httpContextAccessor.HttpContext?.User;
+            if (user?.Identity?.IsAuthenticated == true)
+            {
+                var sub = user.FindFirstValue(JwtRegisteredClaimNames.Sub)
+                          ?? user.FindFirstValue(ClaimTypes.NameIdentifier);
+                log.UserId = Guid.TryParse(sub, out var uid) ? uid : null;
+                log.UserName = user.FindFirstValue("name") ?? user.FindFirstValue(ClaimTypes.Name);
+                log.UserEmail = user.FindFirstValue(JwtRegisteredClaimNames.Email) ?? user.FindFirstValue(ClaimTypes.Email);
+                log.UserRole = user.FindFirstValue("role") ?? user.FindFirstValue(ClaimTypes.Role);
+            }
+
+            db.ApiLogs.Add(log);
             await db.SaveChangesAsync();
         }
         catch (Exception ex)

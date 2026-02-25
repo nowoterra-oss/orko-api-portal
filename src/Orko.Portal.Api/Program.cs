@@ -41,6 +41,9 @@ builder.Services.AddHttpClient<IEvrimApiClient, EvrimApiClient>(client =>
     client.Timeout = TimeSpan.FromSeconds(120);
 });
 
+// --- HttpContextAccessor (OUTGOING loglarda kullanıcı bilgisi için) ---
+builder.Services.AddHttpContextAccessor();
+
 // --- Auth Services ---
 builder.Services.AddSingleton<JwtTokenService>();
 builder.Services.AddScoped<AuthHandler>();
