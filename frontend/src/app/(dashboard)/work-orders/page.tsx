@@ -122,6 +122,9 @@ export default function WorkOrdersPage() {
                       Selsil ID
                     </th>
                     <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">
+                      Müşteri
+                    </th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">
                       Tip
                     </th>
                     <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">
@@ -151,6 +154,9 @@ export default function WorkOrdersPage() {
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-600">
                         {wo.selsilOrderId || "-"}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-600 max-w-[200px] truncate" title={wo.customerName || ""}>
+                        {wo.customerName || "-"}
                       </td>
                       <td className="px-4 py-3">
                         <TypeBadge type={wo.type} />

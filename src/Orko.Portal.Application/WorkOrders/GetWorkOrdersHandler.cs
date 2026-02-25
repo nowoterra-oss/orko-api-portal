@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Orko.Portal.Contracts.Common;
 using Orko.Portal.Contracts.WorkOrders;
@@ -32,22 +33,36 @@ public class GetWorkOrdersHandler
 
         var totalCount = await query.CountAsync();
 
-        var items = await query
+        var rawItems = await query
             .OrderByDescending(w => w.CreatedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(w => new WorkOrderListDto
+            .Select(w => new
             {
-                Id = w.Id,
-                FileNumber = w.FileNumber,
-                SelsilOrderId = w.SelsilOrderId,
+                w.Id,
+                w.FileNumber,
+                w.SelsilOrderId,
                 Type = w.Type.ToString(),
                 Status = w.Status.ToString(),
                 HasDeclaration = w.Declaration != null,
                 SentToEvrim = w.Declaration != null && w.Declaration.SentToEvrim,
-                CreatedAt = w.CreatedAt
+                w.CreatedAt,
+                w.SelsilPayload
             })
             .ToListAsync();
+
+        var items = rawItems.Select(w => new WorkOrderListDto
+        {
+            Id = w.Id,
+            FileNumber = w.FileNumber,
+            SelsilOrderId = w.SelsilOrderId,
+            Type = w.Type,
+            Status = w.Status,
+            HasDeclaration = w.HasDeclaration,
+            SentToEvrim = w.SentToEvrim,
+            CreatedAt = w.CreatedAt,
+            CustomerName = ExtractCustomerName(w.SelsilPayload)
+        }).ToList();
 
         return new PagedResult<WorkOrderListDto>
         {
@@ -86,5 +101,20 @@ public class GetWorkOrdersHandler
                 SentAt = w.Declaration.SentAt
             }
         };
+    }
+
+    private static string? ExtractCustomerName(string? payload)
+    {
+        if (string.IsNullOrEmpty(payload)) return null;
+        try
+        {
+            using var doc = JsonDocument.Parse(payload);
+            if (doc.RootElement.TryGetProperty("CustomerName", out var prop))
+                return prop.GetString();
+            if (doc.RootElement.TryGetProperty("customerName", out prop))
+                return prop.GetString();
+            return null;
+        }
+        catch { return null; }
     }
 }
