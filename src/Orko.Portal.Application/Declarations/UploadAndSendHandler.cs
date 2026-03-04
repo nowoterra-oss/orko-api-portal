@@ -186,21 +186,18 @@ public class UploadAndSendHandler
             var rejimKodu = Val(beyanname, ns, "Rejim");
             var ihracat = rejimKodu?.Length > 0 && rejimKodu[0] == '3';
 
-            // Firma bilgisi — fallback: Alici > DigerGonderici
+            // Firma bilgisi — fallback: Alici > DigerGonderici > Gonderici
             string? musteriUnvani = null;
             var firmaBilgi = beyanname.Element(ns + "Firma_bilgi");
             if (firmaBilgi != null)
             {
-                var aliciFirma = firmaBilgi.Elements(ns + "firma")
-                    .FirstOrDefault(f => f.Element(ns + "Tip")?.Value == "Alici");
-                musteriUnvani = aliciFirma?.Element(ns + "Adi_unvani")?.Value?.Trim();
-
-                // Fallback: DigerGonderici'den al
-                if (string.IsNullOrEmpty(musteriUnvani))
+                // Sırasıyla dene: Alici, DigerGonderici, Gonderici
+                foreach (var tip in new[] { "Alici", "DigerGonderici", "Gonderici" })
                 {
-                    var digerGonderici = firmaBilgi.Elements(ns + "firma")
-                        .FirstOrDefault(f => f.Element(ns + "Tip")?.Value == "DigerGonderici");
-                    musteriUnvani = digerGonderici?.Element(ns + "Adi_unvani")?.Value?.Trim();
+                    var firma = firmaBilgi.Elements(ns + "firma")
+                        .FirstOrDefault(f => f.Element(ns + "Tip")?.Value == tip);
+                    musteriUnvani = firma?.Element(ns + "Adi_unvani")?.Value?.Trim();
+                    if (!string.IsNullOrEmpty(musteriUnvani)) break;
                 }
             }
 
