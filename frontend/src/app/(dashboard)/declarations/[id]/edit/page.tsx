@@ -337,11 +337,14 @@ export default function DeclarationEditPage() {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
+    // Copy file references before resetting input
+    const fileArray = Array.from(files);
+
     // Reset input so same files can be re-selected
     e.target.value = "";
 
     // Validate all files
-    for (const file of Array.from(files)) {
+    for (const file of fileArray) {
       const ext = file.name.split(".").pop()?.toLowerCase();
       if (ext !== "json" && ext !== "xml") {
         alert(`Desteklenmeyen dosya formatı: ${file.name}. Lütfen .json veya .xml dosyası seçin.`);
@@ -353,7 +356,7 @@ export default function DeclarationEditPage() {
     try {
       // Read all files
       const fileEntries = await Promise.all(
-        Array.from(files).map(async (file) => ({
+        fileArray.map(async (file) => ({
           fileName: file.name,
           content: await file.text(),
           ext: file.name.split(".").pop()?.toLowerCase() as string,
