@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Net;
 using System.Xml.Linq;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -73,14 +74,101 @@ public class UploadAndSendHandler
                 ?? throw new InvalidOperationException("JSON dosyasi parse edilemedi.");
         }
 
+        // Ek dosyalar varsa (sonuc/cevap XML) merge et
+        if (dto.AdditionalFiles is { Count: > 0 })
+        {
+            MergeAdditionalXmlFiles(evrimRequest, dto.AdditionalFiles);
+        }
+
         declaration.DeclarationData = JsonSerializer.Serialize(evrimRequest, JsonOptions);
         await _db.SaveChangesAsync();
 
         _logger.LogInformation(
-            "Dosyadan parse edildi: {FileNumber} | Format: {Format}",
-            declaration.WorkOrder.FileNumber, format);
+            "Dosyadan parse edildi: {FileNumber} | Format: {Format} | EkDosya: {AdditionalCount}",
+            declaration.WorkOrder.FileNumber, format, dto.AdditionalFiles?.Count ?? 0);
 
         return evrimRequest;
+    }
+
+    /// <summary>
+    /// Ek XML dosyalarini (sonuc/cevap) parse edip EvrimDeclarationRequest'e merge eder.
+    /// </summary>
+    private void MergeAdditionalXmlFiles(EvrimDeclarationRequest request, List<UploadFileDto> files)
+    {
+        foreach (var file in files)
+        {
+            if (string.IsNullOrWhiteSpace(file.FileContent)) continue;
+
+            try
+            {
+                var content = file.FileContent.Trim();
+
+                // Root elementine gore tani
+                if (content.Contains("<IslemSonucGetir2Result") || content.Contains("<GidenXML>"))
+                {
+                    MergeCevapXml(request, content);
+                }
+                else if (content.Contains("<Response") && content.Contains("<RefID>"))
+                {
+                    MergeSonucXml(request, content);
+                }
+                // <Gelen> ise ana XML — zaten FileContent'te parse edildi, atla
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Ek XML dosyasi parse edilemedi: {FileName}", file.FileName);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Sonuc XML: Selsil yaniti — RefID, GUID
+    /// </summary>
+    private static void MergeSonucXml(EvrimDeclarationRequest request, string xmlContent)
+    {
+        var doc = XDocument.Parse(xmlContent);
+        // Namespace-agnostic arama
+        var response = doc.Descendants().FirstOrDefault(e => e.Name.LocalName == "Response");
+        if (response == null) return;
+
+        var refId = response.Elements().FirstOrDefault(e => e.Name.LocalName == "RefID")?.Value?.Trim();
+        if (!string.IsNullOrEmpty(refId) && string.IsNullOrEmpty(request.RefId))
+            request.RefId = refId;
+    }
+
+    /// <summary>
+    /// Cevap XML: Tescil sonucu — embedded GidenXML icinden Beyanname_no, Tescil_tarihi
+    /// </summary>
+    private static void MergeCevapXml(EvrimDeclarationRequest request, string xmlContent)
+    {
+        var doc = XDocument.Parse(xmlContent);
+
+        // GidenXML elementini bul (HTML-encoded XML iceriyor)
+        var gidenXmlElement = doc.Descendants().FirstOrDefault(e => e.Name.LocalName == "GidenXML");
+        if (gidenXmlElement == null) return;
+
+        // HTML decode
+        var encodedXml = gidenXmlElement.Value;
+        var decodedXml = WebUtility.HtmlDecode(encodedXml);
+
+        var sonucDoc = XDocument.Parse(decodedXml);
+        XNamespace sonucNs = "http://tempuri.org/";
+        var sonuc = sonucDoc.Root;
+        if (sonuc == null) return;
+
+        // Beyanname_no
+        var beyannameNo = sonuc.Element(sonucNs + "Beyanname_no")?.Value?.Trim();
+        if (!string.IsNullOrEmpty(beyannameNo) && string.IsNullOrEmpty(request.DosyaNo))
+            request.DosyaNo = beyannameNo;
+
+        // Tescil_tarihi -> dosyaTarihi
+        var tescilTarihi = sonuc.Element(sonucNs + "Tescil_tarihi")?.Value?.Trim();
+        if (!string.IsNullOrEmpty(tescilTarihi) && string.IsNullOrEmpty(request.DosyaTarihi))
+        {
+            // Format: "23/02/2026" -> "2026-02-23T00:00:00"
+            if (DateTime.TryParseExact(tescilTarihi, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var dt))
+                request.DosyaTarihi = dt.ToString("yyyy-MM-ddTHH:mm:ss");
+        }
     }
 
     private static EvrimDeclarationRequest DeserializeXml(string xmlContent)
@@ -98,7 +186,7 @@ public class UploadAndSendHandler
             var rejimKodu = Val(beyanname, ns, "Rejim");
             var ihracat = rejimKodu?.Length > 0 && rejimKodu[0] == '3';
 
-            // Alici firma bilgisi
+            // Firma bilgisi — fallback: Alici > DigerGonderici
             string? musteriUnvani = null;
             var firmaBilgi = beyanname.Element(ns + "Firma_bilgi");
             if (firmaBilgi != null)
@@ -106,7 +194,19 @@ public class UploadAndSendHandler
                 var aliciFirma = firmaBilgi.Elements(ns + "firma")
                     .FirstOrDefault(f => f.Element(ns + "Tip")?.Value == "Alici");
                 musteriUnvani = aliciFirma?.Element(ns + "Adi_unvani")?.Value?.Trim();
+
+                // Fallback: DigerGonderici'den al
+                if (string.IsNullOrEmpty(musteriUnvani))
+                {
+                    var digerGonderici = firmaBilgi.Elements(ns + "firma")
+                        .FirstOrDefault(f => f.Element(ns + "Tip")?.Value == "DigerGonderici");
+                    musteriUnvani = digerGonderici?.Element(ns + "Adi_unvani")?.Value?.Trim();
+                }
             }
+
+            // Musteri vergi no — fallback: Islem_yapilacak_firma_vergino > Alici_vergi_no
+            var musteriVergi = Val(beyanname, ns, "Islem_yapilacak_firma_vergino")
+                ?? Val(beyanname, ns, "Alici_vergi_no");
 
             // Konteyner: HAYIR→0, EVET→1
             var konteynerRaw = Val(beyanname, ns, "Konteyner");
@@ -160,7 +260,7 @@ public class UploadAndSendHandler
                 KapAdedi = Val(beyanname, ns, "Kap_adedi"),
                 TicaretUlkesi = Val(beyanname, ns, "Ticaret_ulkesi"),
                 ReferansNo = Val(beyanname, ns, "Referans_no"),
-                MusteriVergi = Val(beyanname, ns, "Islem_yapilacak_firma_vergino"),
+                MusteriVergi = musteriVergi,
                 MusteriUnvani = musteriUnvani,
                 GidecegiUlke = Val(beyanname, ns, "Gidecegi_ulke"),
                 SevkUlkesi = Val(beyanname, ns, "Gidecegi_sevk_ulkesi"),

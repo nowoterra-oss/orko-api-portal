@@ -334,24 +334,62 @@ export default function DeclarationEditPage() {
   };
 
   const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
-    // Reset input so same file can be re-selected
+    // Reset input so same files can be re-selected
     e.target.value = "";
 
-    const ext = file.name.split(".").pop()?.toLowerCase();
-    if (ext !== "json" && ext !== "xml") {
-      alert("Desteklenmeyen dosya formatı. Lütfen .json veya .xml dosyası seçin.");
-      return;
+    // Validate all files
+    for (const file of Array.from(files)) {
+      const ext = file.name.split(".").pop()?.toLowerCase();
+      if (ext !== "json" && ext !== "xml") {
+        alert(`Desteklenmeyen dosya formatı: ${file.name}. Lütfen .json veya .xml dosyası seçin.`);
+        return;
+      }
     }
-
-    const fileFormat = ext as "json" | "xml";
 
     setUploading(true);
     try {
-      const fileContent = await file.text();
-      const result = await declarationService.parseFile(id, fileContent, fileFormat);
+      // Read all files
+      const fileEntries = await Promise.all(
+        Array.from(files).map(async (file) => ({
+          fileName: file.name,
+          content: await file.text(),
+          ext: file.name.split(".").pop()?.toLowerCase() as string,
+        }))
+      );
+
+      // Detect main XML (contains <Gelen) vs additional files
+      let mainFile = fileEntries[0];
+      const additionalFiles: { fileName: string; fileContent: string }[] = [];
+
+      if (fileEntries.length > 1) {
+        // Find the main beyanname XML (<Gelen root element)
+        const gelenFile = fileEntries.find((f) => f.content.includes("<Gelen"));
+        if (gelenFile) {
+          mainFile = gelenFile;
+          for (const f of fileEntries) {
+            if (f !== gelenFile) {
+              additionalFiles.push({ fileName: f.fileName, fileContent: f.content });
+            }
+          }
+        } else {
+          // No <Gelen found — use first file as main, rest as additional
+          for (let i = 1; i < fileEntries.length; i++) {
+            additionalFiles.push({ fileName: fileEntries[i].fileName, fileContent: fileEntries[i].content });
+          }
+        }
+      }
+
+      const fileFormat = mainFile.ext as "json" | "xml";
+      const result = await declarationService.parseFile(
+        id,
+        mainFile.content,
+        fileFormat,
+        additionalFiles.length > 0 ? additionalFiles : undefined
+      );
+
       if (result.success && result.data) {
         const parsed = result.data as Record<string, any>;
         setForm({
@@ -360,7 +398,10 @@ export default function DeclarationEditPage() {
           kalemler: parsed.kalemler || [],
         });
         setActiveTab("genel");
-        alert("Dosya başarıyla yüklendi! Lütfen verileri kontrol edip 'Evrim'e Gönder' butonunu kullanın.");
+        const msg = additionalFiles.length > 0
+          ? `${fileEntries.length} dosya başarıyla yüklendi! Lütfen verileri kontrol edip 'Evrim'e Gönder' butonunu kullanın.`
+          : "Dosya başarıyla yüklendi! Lütfen verileri kontrol edip 'Evrim'e Gönder' butonunu kullanın.";
+        alert(msg);
       } else {
         alert("Parse hatası: " + result.message);
       }
@@ -747,11 +788,12 @@ export default function DeclarationEditPage() {
               ref={fileInputRef}
               type="file"
               accept=".json,.xml"
+              multiple
               onChange={handleFileSelected}
               className="hidden"
             />
             <button onClick={() => fileInputRef.current?.click()} disabled={uploading} className="flex items-center gap-1.5 px-4 py-2 bg-violet-600 text-white text-sm rounded-lg hover:bg-violet-700 transition-colors disabled:opacity-50">
-              <Upload className="w-4 h-4" /> {uploading ? "Yükleniyor..." : "Dosyadan Yükle"}
+              <Upload className="w-4 h-4" /> {uploading ? "Yükleniyor..." : "Dosyalardan Yükle"}
             </button>
           </div>
         )}

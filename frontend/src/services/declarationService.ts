@@ -24,18 +24,28 @@ export const declarationService = {
     return data;
   },
 
-  parseFile: async (id: string, fileContent: string, fileFormat: "json" | "xml") => {
+  parseFile: async (
+    id: string,
+    fileContent: string,
+    fileFormat: "json" | "xml",
+    additionalFiles?: { fileName: string; fileContent: string }[]
+  ) => {
     const { data } = await api.post<ApiResponse<Record<string, unknown>>>(
       `/declarations/${id}/parse-file`,
-      { fileContent, fileFormat }
+      { fileContent, fileFormat, additionalFiles }
     );
     return data;
   },
 
-  uploadAndSend: async (id: string, fileContent: string, fileFormat: "json" | "xml") => {
+  uploadAndSend: async (
+    id: string,
+    fileContent: string,
+    fileFormat: "json" | "xml",
+    additionalFiles?: { fileName: string; fileContent: string }[]
+  ) => {
     const { data } = await api.post<ApiResponse<{ evrimDeclarationId: string }>>(
       `/declarations/${id}/upload-and-send`,
-      { fileContent, fileFormat }
+      { fileContent, fileFormat, additionalFiles }
     );
     return data;
   },
