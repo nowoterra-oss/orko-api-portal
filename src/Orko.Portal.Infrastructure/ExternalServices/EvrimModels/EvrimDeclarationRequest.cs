@@ -241,7 +241,7 @@ public class EvrimDeclarationRequest
     public string? TeminatDigerTutarReferansi { get; set; }
 
     [JsonPropertyName("teminatOdeme")]
-    public decimal? TeminatOdeme { get; set; }
+    public string? TeminatOdeme { get; set; }
 
     // --- Birlik ---
     [JsonPropertyName("birlikKayitNumara")]
@@ -701,10 +701,10 @@ public class EvrimKiymetBildirimKalem
     [JsonPropertyName("ithalatKatilanMalzeme")]
     public decimal IthalatKatilanMalzeme { get; set; }
 
-    [JsonPropertyName("IthalatUretimAraclar")]
+    [JsonPropertyName("ithalatUretimAraclar")]
     public decimal IthalatUretimAraclar { get; set; }
 
-    [JsonPropertyName("IthalatUretimTuketimMalzemesi")]
+    [JsonPropertyName("ithalatUretimTuketimMalzemesi")]
     public decimal IthalatUretimTuketimMalzemesi { get; set; }
 
     [JsonPropertyName("planTaslak")]
