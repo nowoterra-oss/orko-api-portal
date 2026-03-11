@@ -120,6 +120,18 @@ export default function DashboardLayout({
             </div>
           </div>
         )}
+
+        {/* Footer */}
+        <div className="p-4 border-t border-gray-100">
+          <a
+            href="https://www.nwtsoft.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-gray-400 hover:text-blue-500 transition-colors"
+          >
+            NwtSoft tarafından yapılmıştır
+          </a>
+        </div>
       </aside>
 
       {/* Main content */}
