@@ -121,6 +121,17 @@ function LoginForm() {
             </button>
           </form>
         </div>
+
+        <p className="text-center mt-6 text-xs text-gray-400">
+          <a
+            href="https://www.nwtsoft.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-blue-500 transition-colors"
+          >
+            NwtSoft tarafından yapılmıştır
+          </a>
+        </p>
       </div>
     </div>
   );
