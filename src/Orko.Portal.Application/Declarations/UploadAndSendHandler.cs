@@ -111,10 +111,7 @@ public class UploadAndSendHandler
                 {
                     MergeCevapXml(request, content);
                 }
-                else if (content.Contains("<Response") && content.Contains("<RefID>"))
-                {
-                    MergeSonucXml(request, content);
-                }
+                // <Response> + <RefID> → sonuc XML, RefID bos gonderilmeli, atla
                 // <Gelen> ise ana XML — zaten FileContent'te parse edildi, atla
             }
             catch (Exception ex)
@@ -122,20 +119,6 @@ public class UploadAndSendHandler
                 _logger.LogWarning(ex, "Ek XML dosyasi parse edilemedi: {FileName}", file.FileName);
             }
         }
-    }
-
-    /// <summary>
-    /// Sonuc XML: Selsil yaniti — RefID, GUID
-    /// </summary>
-    private static void MergeSonucXml(EvrimDeclarationRequest request, string xmlContent)
-    {
-        var doc = XDocument.Parse(xmlContent);
-        var response = doc.Descendants().FirstOrDefault(e => e.Name.LocalName == "Response");
-        if (response == null) return;
-
-        var refId = response.Elements().FirstOrDefault(e => e.Name.LocalName == "RefID")?.Value?.Trim();
-        if (!string.IsNullOrEmpty(refId) && string.IsNullOrEmpty(request.RefId))
-            request.RefId = refId;
     }
 
     /// <summary>
