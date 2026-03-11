@@ -60,12 +60,15 @@ public class UploadAndSendHandler
         if (string.IsNullOrWhiteSpace(dto.FileContent))
             throw new InvalidOperationException("Dosya icerigi bos.");
 
+        // WorkOrder.FileNumber: XML'de Adi_unvani ve Cadde_s_no da bos gelirse son fallback
+        var customerNameFallback = declaration.WorkOrder.FileNumber;
+
         EvrimDeclarationRequest evrimRequest;
         var format = dto.FileFormat?.ToLowerInvariant() ?? "json";
 
         if (format == "xml")
         {
-            evrimRequest = DeserializeXml(dto.FileContent);
+            evrimRequest = DeserializeXml(dto.FileContent, customerNameFallback);
         }
         else
         {
@@ -85,7 +88,7 @@ public class UploadAndSendHandler
 
         _logger.LogInformation(
             "Dosyadan parse edildi: {FileNumber} | Format: {Format} | EkDosya: {AdditionalCount}",
-            declaration.WorkOrder.FileNumber, format, dto.AdditionalFiles?.Count ?? 0);
+            declaration.WorkOrder?.FileNumber ?? declarationId.ToString(), format, dto.AdditionalFiles?.Count ?? 0);
 
         return evrimRequest;
     }
@@ -214,7 +217,7 @@ public class UploadAndSendHandler
         }
     }
 
-    private static EvrimDeclarationRequest DeserializeXml(string xmlContent)
+    private static EvrimDeclarationRequest DeserializeXml(string xmlContent, string? customerNameFallback = null)
     {
         try
         {
@@ -230,7 +233,9 @@ public class UploadAndSendHandler
             // Rejim 3xxx → ihracat, 4xxx/5xxx → ithalat
             var ihracat = rejimKodu?.Length > 0 && rejimKodu[0] == '3';
 
-            // ── Müşteri ünvanı: Firma_bilgi'den Alici > DigerGonderici > Gonderici
+            // ── Müşteri ünvanı: Önce Firma_bilgi > Adi_unvani dene (Alici > DigerGonderici > Gonderici sırası)
+            // Yoksa ilk firmanın Cadde_s_no'sundan al (adres içinde genellikle firma adı olur)
+            // Son fallback: WorkOrder.CustomerName (DB'den)
             string? musteriUnvani = null;
             var firmaBilgi = beyanname.Element(ns + "Firma_bilgi");
             if (firmaBilgi != null)
@@ -243,6 +248,22 @@ public class UploadAndSendHandler
                     if (!string.IsNullOrEmpty(musteriUnvani)) break;
                 }
             }
+
+            // Fallback 1: İlk firmanın adresi (bazı XML'lerde Adi_unvani boş gelir)
+            if (string.IsNullOrEmpty(musteriUnvani))
+            {
+                var ilkFirma = firmaBilgi?.Elements(ns + "firma").FirstOrDefault();
+                var cadde = ilkFirma?.Element(ns + "Cadde_s_no")?.Value?.Trim();
+                if (!string.IsNullOrEmpty(cadde))
+                {
+                    // Adres formatı: "RO 25215714  STR POVERNEI NR..." → ilk anlamlı kısmı al (max 100 karakter)
+                    musteriUnvani = cadde.Length > 100 ? cadde[..100] : cadde;
+                }
+            }
+
+            // Fallback 2: WorkOrder.CustomerName (DB'de iş emri oluşturulurken kaydedilmiş olan)
+            if (string.IsNullOrEmpty(musteriUnvani) && !string.IsNullOrEmpty(customerNameFallback))
+                musteriUnvani = customerNameFallback;
 
             // ── Müşteri vergi no
             var musteriVergi = Val(beyanname, ns, "Islem_yapilacak_firma_vergino")
