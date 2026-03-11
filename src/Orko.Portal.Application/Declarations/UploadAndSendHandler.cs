@@ -579,7 +579,7 @@ public class UploadAndSendHandler
                 TeminatAciklama = Val(teminatEl, ns, "Aciklama"),
                 TeminatGlobalGarantiNo = Val(teminatEl, ns, "Global_teminat_no"),
                 TeminatDigerTutarReferansi = Val(teminatEl, ns, "Diger_tutar_referansi"),
-                TeminatOdeme = Dec(teminatEl, ns, "Nakdi_teminat_tutari"),
+                TeminatOdeme = Dec(teminatEl, ns, "Nakdi_teminat_tutari")?.ToString(CultureInfo.InvariantCulture),
 
                 // Birlik
                 BirlikKayitNumara = Val(beyanname, ns, "Birlik_kayit_numarasi"),

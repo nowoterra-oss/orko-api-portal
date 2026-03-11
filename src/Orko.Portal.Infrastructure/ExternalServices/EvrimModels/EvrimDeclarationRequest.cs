@@ -235,7 +235,7 @@ public class EvrimDeclarationRequest
     public string? TeminatDigerTutarReferansi { get; set; }
 
     [JsonPropertyName("teminatOdeme")]
-    public decimal? TeminatOdeme { get; set; }
+    public string? TeminatOdeme { get; set; }
 
     // --- Birlik ---
     [JsonPropertyName("birlikKayitNumara")]
