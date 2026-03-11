@@ -335,3 +335,132 @@
     "newStatus": "GecersizStatu",
     "note": "Bu hata donmeli"
   }
+
+  ### ============================================================
+  ### 9. AYARLAR (SETTINGS) - Admin only
+  ### ============================================================
+
+  ### 9a. Tum ayarlari listele
+  GET {{baseUrl}}/settings
+  Authorization: Bearer {{login.response.body.data.token}}
+  Content-Type: application/json
+
+  ### 9b. SMTP ayarlarini listele
+  GET {{baseUrl}}/settings/Smtp
+  Authorization: Bearer {{login.response.body.data.token}}
+  Content-Type: application/json
+
+  ### 9c. WorkOrderEmail ayarlarini listele
+  GET {{baseUrl}}/settings/WorkOrderEmail
+  Authorization: Bearer {{login.response.body.data.token}}
+  Content-Type: application/json
+
+  ### 9d. Reminder ayarlarini listele
+  GET {{baseUrl}}/settings/Reminder
+  Authorization: Bearer {{login.response.body.data.token}}
+  Content-Type: application/json
+
+  ### 9e. SMTP ayarlarini guncelle
+  PUT {{baseUrl}}/settings
+  Authorization: Bearer {{login.response.body.data.token}}
+  Content-Type: application/json
+
+  {
+    "settings": [
+      { "key": "Smtp:Host", "value": "smtp.gmail.com" },
+      { "key": "Smtp:Port", "value": "587" },
+      { "key": "Smtp:Username", "value": "test@gmail.com" },
+      { "key": "Smtp:Password", "value": "uygulama-sifresi" },
+      { "key": "Smtp:FromAddress", "value": "test@gmail.com" },
+      { "key": "Smtp:FromName", "value": "Orko Portal" },
+      { "key": "Smtp:EnableSsl", "value": "true" }
+    ]
+  }
+
+  ### 9f. Is emri e-posta bildirim ayarlarini guncelle
+  PUT {{baseUrl}}/settings
+  Authorization: Bearer {{login.response.body.data.token}}
+  Content-Type: application/json
+
+  {
+    "settings": [
+      { "key": "WorkOrderEmail:Enabled", "value": "true" },
+      { "key": "WorkOrderEmail:Recipients", "value": "muhasebe@firma.com,koordinator@firma.com" },
+      { "key": "WorkOrderEmail:Subject", "value": "Yeni Is Emri: {FileNumber}" },
+      { "key": "WorkOrderEmail:Template", "value": "Yeni bir is emri olusturuldu.\n\nDosya No: {FileNumber}\nMusteri: {CustomerName}\nAciklama: {Description}" }
+    ]
+  }
+
+  ### 9g. Hatirlatma (Reminder) ayarlarini guncelle
+  PUT {{baseUrl}}/settings
+  Authorization: Bearer {{login.response.body.data.token}}
+  Content-Type: application/json
+
+  {
+    "settings": [
+      { "key": "Reminder:Enabled", "value": "true" },
+      { "key": "Reminder:CronExpression", "value": "0 9 * * 1-5" },
+      { "key": "Reminder:Recipients", "value": "sorumlu@firma.com" },
+      { "key": "Reminder:DraftThresholdHours", "value": "48" },
+      { "key": "Reminder:Subject", "value": "Bekleyen Beyannameler Hatirlatmasi" },
+      { "key": "Reminder:Template", "value": "Asagidaki beyannameler {ThresholdHours} saatir Taslak durumunda beklemektedir:\n\n{DraftList}" }
+    ]
+  }
+
+  ### 9h. SMTP baglanti testi
+  POST {{baseUrl}}/settings/smtp-test
+  Authorization: Bearer {{login.response.body.data.token}}
+  Content-Type: application/json
+
+  ### 9i. Operator kullanici ile ayarlara erisim (403 donmeli)
+  # NOT: Once operator kullanici ile login olun
+  GET {{baseUrl}}/settings
+  Authorization: Bearer {{login.response.body.data.token}}
+  Content-Type: application/json
+
+  ### ============================================================
+  ### 10. COKLU XML DOSYA YUKLEME (Selsil 3'lu XML import)
+  ### ============================================================
+
+  ### 10a. Sadece ana XML ile parse (tek dosya)
+  # NOT: declarationId'yi 3a'dan alin
+  POST {{baseUrl}}/declarations/{{declarationId}}/parse-file
+  Authorization: Bearer {{login.response.body.data.token}}
+  Content-Type: application/json
+
+  {
+    "fileContent": "<?xml version=\"1.0\" encoding=\"utf-8\"?><Gelen xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\"><RefID>TEST-REF-001</RefID><BeyannameBilgi xmlns=\"http://tempuri.org/\"><Rejim>4000</Rejim><Referans_no>ORK-20260301-0001</Referans_no><GUMRUK>340100</GUMRUK><Ticaret_ulkesi>DE</Ticaret_ulkesi><Cikis_ulkesi>DE</Cikis_ulkesi><Gidecegi_sevk_ulkesi>TR</Gidecegi_sevk_ulkesi><Teslim_sekli>CIF</Teslim_sekli><Teslim_yeri>Istanbul</Teslim_yeri><Konteyner>HAYIR</Konteyner><Sinirdaki_tasima_sekli>10</Sinirdaki_tasima_sekli><Toplam_fatura>50000</Toplam_fatura><Toplam_fatura_dovizi>EUR</Toplam_fatura_dovizi><Beyan_sahibi_vergi_no>1234567890</Beyan_sahibi_vergi_no><Musavir_vergi_no>9876543210</Musavir_vergi_no><Firma_bilgi><firma><Tip>Alici</Tip><Adi_unvani>Test Musteri A.S.</Adi_unvani><No>TR1234567890</No></firma></Firma_bilgi><Kalemler><kalem><Kalem_sira_no>1</Kalem_sira_no><Gtip>8471.30.00.00.00</Gtip><Mensei_ulke>DE</Mensei_ulke><Brut_agirlik>100</Brut_agirlik><Net_agirlik>90</Net_agirlik><Fatura_miktari>50000</Fatura_miktari><Miktar>10</Miktar><Miktar_birimi>C62</Miktar_birimi><Fatura_miktarinin_dovizi>EUR</Fatura_miktarinin_dovizi><Ticari_tanimi>Dizustu Bilgisayar</Ticari_tanimi></kalem></Kalemler><KiymetBildirim><Kiymet><FaturaTarihiSayisi>15/03/2026 INV-2026-100</FaturaTarihiSayisi></Kiymet></KiymetBildirim></BeyannameBilgi></Gelen>",
+    "fileFormat": "xml"
+  }
+
+  ### 10b. Ana XML + Sonuc XML (RefID merge) ile parse
+  POST {{baseUrl}}/declarations/{{declarationId}}/parse-file
+  Authorization: Bearer {{login.response.body.data.token}}
+  Content-Type: application/json
+
+  {
+    "fileContent": "<?xml version=\"1.0\" encoding=\"utf-8\"?><Gelen xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\"><RefID></RefID><BeyannameBilgi xmlns=\"http://tempuri.org/\"><Rejim>4000</Rejim><Referans_no>ORK-20260301-0002</Referans_no><GUMRUK>340100</GUMRUK><Ticaret_ulkesi>DE</Ticaret_ulkesi><Cikis_ulkesi>DE</Cikis_ulkesi><Toplam_fatura>75000</Toplam_fatura><Toplam_fatura_dovizi>EUR</Toplam_fatura_dovizi><Beyan_sahibi_vergi_no>1234567890</Beyan_sahibi_vergi_no><Musavir_vergi_no>9876543210</Musavir_vergi_no><Firma_bilgi><firma><Tip>Alici</Tip><Adi_unvani>Ornek Firma Ltd.</Adi_unvani><No>TR9876543210</No></firma></Firma_bilgi><Kalemler><kalem><Kalem_sira_no>1</Kalem_sira_no><Gtip>8417.80.20.00.00</Gtip><Mensei_ulke>DE</Mensei_ulke><Brut_agirlik>500</Brut_agirlik><Net_agirlik>450</Net_agirlik><Fatura_miktari>75000</Fatura_miktari><Miktar>1</Miktar><Miktar_birimi>C62</Miktar_birimi><Fatura_miktarinin_dovizi>EUR</Fatura_miktarinin_dovizi><Ticari_tanimi>Endustriyel Firın</Ticari_tanimi></kalem></Kalemler><KiymetBildirim><Kiymet><FaturaTarihiSayisi>10/03/2026 INV-2026-200</FaturaTarihiSayisi></Kiymet></KiymetBildirim></BeyannameBilgi></Gelen>",
+    "fileFormat": "xml",
+    "additionalFiles": [
+      {
+        "fileName": "sonuc.xml",
+        "fileContent": "<?xml version=\"1.0\" encoding=\"utf-8\"?><Response><RefID>SELSIL-REF-20260310-001</RefID><GUID>abc123-def456-789xyz</GUID><Status>OK</Status></Response>"
+      }
+    ]
+  }
+
+  ### 10c. XML parse sonrasi detay kontrol (RefID dolmali)
+  GET {{baseUrl}}/declarations/{{declarationId}}
+  Authorization: Bearer {{login.response.body.data.token}}
+  Content-Type: application/json
+
+  ### ============================================================
+  ### 11. HANGFIRE DASHBOARD
+  ### ============================================================
+
+  ### 11a. Hangfire dashboard erisimi (tarayicidan acilamazsa VPN/admin gerektiriyor)
+  # Tarayicida: http://localhost:5045/hangfire
+  # Uretim:     https://orko.nwtsoft.com/hangfire
+  # NOT: Admin JWT token ile erisim saglaniyor
+  # GET http://localhost:5045/hangfire
+  # Authorization: Bearer {{login.response.body.data.token}}
