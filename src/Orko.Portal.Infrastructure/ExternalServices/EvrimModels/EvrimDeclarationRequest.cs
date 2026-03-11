@@ -17,6 +17,12 @@ public class EvrimDeclarationRequest
     [JsonPropertyName("dosyaNo")]
     public string? DosyaNo { get; set; }
 
+    [JsonPropertyName("beyannameNo")]
+    public string? BeyannameNo { get; set; }
+
+    [JsonPropertyName("beyannameTarihi")]
+    public string? BeyannameTarihi { get; set; }  // yyyy-MM-ddTHH:mm:ss — Evrim zorunlu tutuyor
+
     [JsonPropertyName("referansNo")]
     public string? ReferansNo { get; set; }  // Firma referansi (max 100)
 
@@ -235,7 +241,7 @@ public class EvrimDeclarationRequest
     public string? TeminatDigerTutarReferansi { get; set; }
 
     [JsonPropertyName("teminatOdeme")]
-    public string? TeminatOdeme { get; set; }
+    public decimal? TeminatOdeme { get; set; }
 
     // --- Birlik ---
     [JsonPropertyName("birlikKayitNumara")]

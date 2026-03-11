@@ -213,7 +213,7 @@ public class UploadAndSendHandler
         // Sonraki kullanım için aciklamalar alanına eklenebilir (opsiyonel)
         if (!string.IsNullOrEmpty(eTicaretCevap) && request.Aciklamalar != null)
         {
-            _ = eTicaretCevap; // şimdilik ignore, gerekirse kullan
+            _  = eTicaretCevap; // şimdilik ignore, gerekirse kullan
         }
     }
 
@@ -299,7 +299,7 @@ public class UploadAndSendHandler
                         .Elements(ns + "OdemeSekli")
                         .Select(os => new EvrimOdemeSekli
                         {
-                            Kodu = Int(os, ns, "OdemeSekliKodu"),
+                            Kodu   = Int(os, ns, "OdemeSekliKodu"),
                             Tutari = Dec(os, ns, "OdemeTutari"),
                             TranferBildirimNo = Val(os, ns, "TBFID"),
                         })
@@ -312,10 +312,10 @@ public class UploadAndSendHandler
                         .Where(d => Val(d, ns, "Kalem_no") == Val(kalem, ns, "Kalem_sira_no"))
                         .Select(d => new EvrimDokuman
                         {
-                            KalemNo = Int(d, ns, "Kalem_no") ?? 1,
-                            Kod = Val(d, ns, "Kod"),
-                            Cevap = Val(d, ns, "Dogrulama"),
-                            Tarihi = FormatTarih(Val(d, ns, "Belge_tarihi")),
+                            KalemNo  = Int(d, ns, "Kalem_no") ?? 1,
+                            Kod      = Val(d, ns, "Kod"),
+                            Cevap    = Val(d, ns, "Dogrulama"),
+                            Tarihi   = FormatTarih(Val(d, ns, "Belge_tarihi")),
                             Referans = Val(d, ns, "Referans"),
                         })
                         .ToList();
@@ -323,68 +323,68 @@ public class UploadAndSendHandler
                     // Yurtiçi harcamalar (kalem seviyesi)
                     var yurtIciHarcamalari = new EvrimYurtIciHarcamalari
                     {
-                        Ardiye = Dec(kalem, ns, "Yurtici_Depolama") ?? 0,
-                        TahmilTahliye = Dec(kalem, ns, "Yurtici_Tahliye") ?? 0,
+                        Ardiye          = Dec(kalem, ns, "Yurtici_Depolama") ?? 0,
+                        TahmilTahliye   = Dec(kalem, ns, "Yurtici_Tahliye") ?? 0,
                         BankaMasraflari = Dec(kalem, ns, "Yurtici_Banka") ?? 0,
-                        KkdfMatrah = Dec(kalem, ns, "Yurtici_Kkdf") ?? 0,
-                        KulturFonu = Dec(kalem, ns, "Yurtici_Kultur") ?? 0,
-                        Diger1 = Dec(kalem, ns, "Yurtici_Diger") ?? 0,
-                        YurtIciCevre = Dec(kalem, ns, "Yurtici_Cevre") ?? 0,
-                        DigerAciklama = Val(kalem, ns, "Yurtici_Diger_Aciklama"),
+                        KkdfMatrah      = Dec(kalem, ns, "Yurtici_Kkdf") ?? 0,
+                        KulturFonu      = Dec(kalem, ns, "Yurtici_Kultur") ?? 0,
+                        Diger1          = Dec(kalem, ns, "Yurtici_Diger") ?? 0,
+                        YurtIciCevre    = Dec(kalem, ns, "Yurtici_Cevre") ?? 0,
+                        DigerAciklama   = Val(kalem, ns, "Yurtici_Diger_Aciklama"),
                     };
 
                     kalemler.Add(new EvrimDeclarationKalem
                     {
-                        DetayNo = Int(kalem, ns, "Kalem_sira_no"),
-                        GtipNo = Val(kalem, ns, "Gtip"),
-                        MenseiUlke = Val(kalem, ns, "Mensei_ulke"),
-                        BrutAgirlik = brut,
-                        NetAgirlik = net,
-                        TamamlayiciOlcuBirimi = Val(kalem, ns, "Tamamlayici_olcu_birimi"),
-                        IstatistikiMiktar = Dec(kalem, ns, "Istatistiki_miktar"),
-                        UluslararasiAnlasma = Val(kalem, ns, "Uluslararasi_anlasma"),
-                        AlgilamaMiktari1 = Dec(kalem, ns, "Algilama_miktari_1"),
-                        AlgilamaBirimi1 = Val(kalem, ns, "Algilama_birimi_1"),
-                        AlgilamaMiktari2 = Dec(kalem, ns, "Algilama_miktari_2"),
-                        AlgilamaBirimi2 = Val(kalem, ns, "Algilama_birimi_2"),
-                        MuafKod = Val(kalem, ns, "Muafiyetler_1"),
-                        MuafKod2 = Val(kalem, ns, "Muafiyetler_2"),
-                        MuafKod3 = Val(kalem, ns, "Muafiyetler_3"),
-                        MuafKod4 = Val(kalem, ns, "Muafiyetler_4"),
-                        MuafKod5 = Val(kalem, ns, "Muafiyetler_5"),
-                        EkKod = Val(kalem, ns, "Ek_kod"),
-                        Ozellik = Val(kalem, ns, "Ozellik"),
-                        KalemFiyati = Dec(kalem, ns, "Fatura_miktari"),
-                        Miktar = Dec(kalem, ns, "Miktar"),
-                        MiktarBirimi = Val(kalem, ns, "Miktar_birimi"),
-                        Doviz = Val(kalem, ns, "Fatura_miktarinin_dovizi"),
-                        NavlunMiktari = Dec(kalem, ns, "Navlun_miktari"),
-                        SigortaMiktari = Dec(kalem, ns, "Sigorta_miktari"),
-                        TicariTanim = Val(kalem, ns, "Ticari_tanimi"),
-                        EsyaTanimi1 = Val(kalem, ns, "Ticari_tanimi"),
-                        Cinsi = Val(kalem, ns, "Cinsi"),
-                        Adedi = Val(kalem, ns, "Adedi"),
-                        Marka = Val(kalem, ns, "Marka"),
-                        Numara = Val(kalem, ns, "Numara"),
-                        IkincilIslem = Val(kalem, ns, "Ikincil_islem"),
-                        TesvikNo = Val(kalem, ns, "Satir_no"),
-                        KdvOrani = Val(kalem, ns, "Kdv_orani"),
-                        KullanilmisEsya = Val(kalem, ns, "Kullanilmis_esya"),
-                        KalemIslemNiteligi = Val(kalem, ns, "Kalem_Islem_Niteligi"),
-                        GirisCikisAmaci = Val(kalem, ns, "Giris_Cikis_Amaci"),
+                        DetayNo                 = Int(kalem, ns, "Kalem_sira_no"),
+                        GtipNo                  = Val(kalem, ns, "Gtip"),
+                        MenseiUlke              = Val(kalem, ns, "Mensei_ulke"),
+                        BrutAgirlik             = brut,
+                        NetAgirlik              = net,
+                        TamamlayiciOlcuBirimi   = Val(kalem, ns, "Tamamlayici_olcu_birimi"),
+                        IstatistikiMiktar       = Dec(kalem, ns, "Istatistiki_miktar"),
+                        UluslararasiAnlasma     = Val(kalem, ns, "Uluslararasi_anlasma"),
+                        AlgilamaMiktari1        = Dec(kalem, ns, "Algilama_miktari_1"),
+                        AlgilamaBirimi1         = Val(kalem, ns, "Algilama_birimi_1"),
+                        AlgilamaMiktari2        = Dec(kalem, ns, "Algilama_miktari_2"),
+                        AlgilamaBirimi2         = Val(kalem, ns, "Algilama_birimi_2"),
+                        MuafKod                 = Val(kalem, ns, "Muafiyetler_1"),
+                        MuafKod2                = Val(kalem, ns, "Muafiyetler_2"),
+                        MuafKod3                = Val(kalem, ns, "Muafiyetler_3"),
+                        MuafKod4                = Val(kalem, ns, "Muafiyetler_4"),
+                        MuafKod5                = Val(kalem, ns, "Muafiyetler_5"),
+                        EkKod                   = Val(kalem, ns, "Ek_kod"),
+                        Ozellik                 = Val(kalem, ns, "Ozellik"),
+                        KalemFiyati             = Dec(kalem, ns, "Fatura_miktari"),
+                        Miktar                  = Dec(kalem, ns, "Miktar"),
+                        MiktarBirimi            = Val(kalem, ns, "Miktar_birimi"),
+                        Doviz                   = Val(kalem, ns, "Fatura_miktarinin_dovizi"),
+                        NavlunMiktari           = Dec(kalem, ns, "Navlun_miktari"),
+                        SigortaMiktari          = Dec(kalem, ns, "Sigorta_miktari"),
+                        TicariTanim             = Val(kalem, ns, "Ticari_tanimi"),
+                        EsyaTanimi1             = Val(kalem, ns, "Ticari_tanimi"),
+                        Cinsi                   = Val(kalem, ns, "Cinsi"),
+                        Adedi                   = Val(kalem, ns, "Adedi"),
+                        Marka                   = Val(kalem, ns, "Marka"),
+                        Numara                  = Val(kalem, ns, "Numara"),
+                        IkincilIslem            = Val(kalem, ns, "Ikincil_islem"),
+                        TesvikNo                = Val(kalem, ns, "Satir_no"),
+                        KdvOrani                = Val(kalem, ns, "Kdv_orani"),
+                        KullanilmisEsya         = Val(kalem, ns, "Kullanilmis_esya"),
+                        KalemIslemNiteligi      = Val(kalem, ns, "Kalem_Islem_Niteligi"),
+                        GirisCikisAmaci         = Val(kalem, ns, "Giris_Cikis_Amaci"),
                         GirisCikisAmaciAciklama = Val(kalem, ns, "Giris_Cikis_Amaci_Aciklama"),
-                        EsyaGeriGelmeSebebi = Val(kalem, ns, "EsyaGeriGelmeSebebi"),
+                        EsyaGeriGelmeSebebi     = Val(kalem, ns, "EsyaGeriGelmeSebebi"),
                         EsyaGeriGelmeSebebiAciklama = Val(kalem, ns, "EsyaGeriGelmeSebebiAciklamasi"),
-                        YurtDisiRoyalti = Dec(kalem, ns, "YurtDisi_Royalti"),
-                        YurtDisiRoyaltiDovizi = Val(kalem, ns, "YurtDisi_Royalti_Dovizi"),
-                        YurtDisiKomisyon = Dec(kalem, ns, "YurtDisi_Komisyon"),
-                        YurtDisiDepolama = Dec(kalem, ns, "YurtDisi_Demuraj"),
-                        FobTutar = Dec(kalem, ns, "Fatura_miktari"),
-                        FaturaNo = parsedFaturaNo,
-                        FaturaTarihi = parsedFaturaTarihi,
-                        YurtIciHarcamalari = yurtIciHarcamalari,
-                        OdemeSekilleri = odemeSekilleri,
-                        DokumanEdiBelgeler = dokumanlar,
+                        YurtDisiRoyalti         = Dec(kalem, ns, "YurtDisi_Royalti"),
+                        YurtDisiRoyaltiDovizi   = Val(kalem, ns, "YurtDisi_Royalti_Dovizi"),
+                        YurtDisiKomisyon        = Dec(kalem, ns, "YurtDisi_Komisyon"),
+                        YurtDisiDepolama        = Dec(kalem, ns, "YurtDisi_Demuraj"),
+                        FobTutar                = Dec(kalem, ns, "Fatura_miktari"),
+                        FaturaNo                = parsedFaturaNo,
+                        FaturaTarihi            = parsedFaturaTarihi,
+                        YurtIciHarcamalari      = yurtIciHarcamalari,
+                        OdemeSekilleri          = odemeSekilleri,
+                        DokumanEdiBelgeler      = dokumanlar,
                     });
                 }
             }
@@ -394,10 +394,10 @@ public class UploadAndSendHandler
                 .Elements(ns + "firma")
                 .Select((f, i) => new EvrimFirma
                 {
-                    No = i + 1,
-                    Tip = Val(f, ns, "Tip"),
+                    No       = i + 1,
+                    Tip      = Val(f, ns, "Tip"),
                     Yfksiiks = Val(f, ns, "No"),
-                    Adres = Val(f, ns, "Cadde_s_no"),
+                    Adres    = Val(f, ns, "Cadde_s_no"),
                 })
                 .ToList();
 
@@ -407,15 +407,15 @@ public class UploadAndSendHandler
                 .Elements(ns + "Ozetbeyan")
                 .Select(ob => new EvrimOzetBeyan
                 {
-                    OzetbeyanNo = Val(ob, ns, "Ozetbeyan_no"),
-                    TasimaSenediNo = ob.Element(ns + "ozbyacma_bilgi")
+                    OzetbeyanNo           = Val(ob, ns, "Ozetbeyan_no"),
+                    TasimaSenediNo        = ob.Element(ns + "ozbyacma_bilgi")
                                             ?.Element(ns + "tasimasenetleri")
                                             ?.Element(ns + "Tasima_senedi_no")?.Value?.Trim(),
-                    BaskamRejim = Val(ob, ns, "Baska_rejim"),
-                    AmbarIci = Val(ob, ns, "Ambar_ici"),
+                    BaskamRejim           = Val(ob, ns, "Baska_rejim"),
+                    AmbarIci              = Val(ob, ns, "Ambar_ici"),
                     OzetbeyanIslemKapsami = Val(ob, ns, "Ozetbeyan_islem_kapsami"),
-                    ToplamMiktar = Dec(kalemlerElement?.Element(ns + "kalem"), ns, "Miktar"),
-                    GtipNo = Dec(kalemlerElement?.Element(ns + "kalem"), ns, "Gtip") != null
+                    ToplamMiktar          = Dec(kalemlerElement?.Element(ns + "kalem"), ns, "Miktar"),
+                    GtipNo                = Dec(kalemlerElement?.Element(ns + "kalem"), ns, "Gtip") != null
                                             ? Val(kalemlerElement!.Element(ns + "kalem")!, ns, "Gtip")
                                             : null,
                 })
@@ -428,14 +428,14 @@ public class UploadAndSendHandler
             var ilkKalemEl = kalemlerElement?.Element(ns + "kalem");
             var yurtIciBeyanname = ilkKalemEl != null ? new EvrimYurtIciHarcamalari
             {
-                Ardiye = Dec(ilkKalemEl, ns, "Yurtici_Depolama") ?? 0,
-                TahmilTahliye = Dec(ilkKalemEl, ns, "Yurtici_Tahliye") ?? 0,
+                Ardiye          = Dec(ilkKalemEl, ns, "Yurtici_Depolama") ?? 0,
+                TahmilTahliye   = Dec(ilkKalemEl, ns, "Yurtici_Tahliye") ?? 0,
                 BankaMasraflari = Dec(ilkKalemEl, ns, "Yurtici_Banka") ?? 0,
-                KkdfMatrah = Dec(ilkKalemEl, ns, "Yurtici_Kkdf") ?? 0,
-                KulturFonu = Dec(ilkKalemEl, ns, "Yurtici_Kultur") ?? 0,
-                Diger1 = Dec(ilkKalemEl, ns, "Yurtici_Diger") ?? 0,
-                YurtIciCevre = Dec(ilkKalemEl, ns, "Yurtici_Cevre") ?? 0,
-                DigerAciklama = Val(ilkKalemEl, ns, "Yurtici_Diger_Aciklama"),
+                KkdfMatrah      = Dec(ilkKalemEl, ns, "Yurtici_Kkdf") ?? 0,
+                KulturFonu      = Dec(ilkKalemEl, ns, "Yurtici_Kultur") ?? 0,
+                Diger1          = Dec(ilkKalemEl, ns, "Yurtici_Diger") ?? 0,
+                YurtIciCevre    = Dec(ilkKalemEl, ns, "Yurtici_Cevre") ?? 0,
+                DigerAciklama   = Val(ilkKalemEl, ns, "Yurtici_Diger_Aciklama"),
             } : null;
 
             // ── KıymetBildirim
@@ -448,153 +448,174 @@ public class UploadAndSendHandler
                     .Elements(ns + "KiymetKalem")
                     .Select((kk, i) => new EvrimKiymetBildirimKalem
                     {
-                        DetayNo = i + 1,
-                        DolayliOdeme = Dec(kk, ns, "DolayliOdeme") ?? 0,
-                        Komisyon = Dec(kk, ns, "Komisyon") ?? 0,
-                        Tellaliye = Dec(kk, ns, "Tellaliye") ?? 0,
-                        KapAmbalajBedeli = Dec(kk, ns, "KapAmbalajBedeli") ?? 0,
-                        IthalatKatilanMalzeme = Dec(kk, ns, "IthalaKatilanMalzeme") ?? 0,
-                        IthalatUretimAraclar = Dec(kk, ns, "IthalaUretimAraclar") ?? 0,
+                        DetayNo                       = i + 1,
+                        DolayliOdeme                  = Dec(kk, ns, "DolayliOdeme") ?? 0,
+                        Komisyon                      = Dec(kk, ns, "Komisyon") ?? 0,
+                        Tellaliye                     = Dec(kk, ns, "Tellaliye") ?? 0,
+                        KapAmbalajBedeli              = Dec(kk, ns, "KapAmbalajBedeli") ?? 0,
+                        IthalatKatilanMalzeme         = Dec(kk, ns, "IthalaKatilanMalzeme") ?? 0,
+                        IthalatUretimAraclar          = Dec(kk, ns, "IthalaUretimAraclar") ?? 0,
                         IthalatUretimTuketimMalzemesi = Dec(kk, ns, "IthalaUretimTuketimMalzemesi") ?? 0,
-                        PlanTaslak = Dec(kk, ns, "PlanTaslak") ?? 0,
-                        RoyaltiLisans = Dec(kk, ns, "RoyaltiLisans") ?? 0,
-                        DolayliIntikal = Dec(kk, ns, "DolayliIntikal") ?? 0,
-                        Nakliye = Dec(kk, ns, "Nakliye") ?? 0,
-                        Sigorta = Dec(kk, ns, "Sigorta") ?? 0,
-                        GirisSonrasiNakliye = Dec(kk, ns, "GirisSonrasiNakliye") ?? 0,
-                        TeknikYardim = Dec(kk, ns, "TeknikYardim") ?? 0,
-                        DigerOdemeler = Dec(kk, ns, "DigerOdemeler") ?? 0,
-                        DigerOdemelerNiteligi = Val(kk, ns, "DigerOdemelerNiteligi"),
-                        VergiHarcFon = Dec(kk, ns, "VergiHarcFon") ?? 0,
+                        PlanTaslak                    = Dec(kk, ns, "PlanTaslak") ?? 0,
+                        RoyaltiLisans                 = Dec(kk, ns, "RoyaltiLisans") ?? 0,
+                        DolayliIntikal                = Dec(kk, ns, "DolayliIntikal") ?? 0,
+                        Nakliye                       = Dec(kk, ns, "Nakliye") ?? 0,
+                        Sigorta                       = Dec(kk, ns, "Sigorta") ?? 0,
+                        GirisSonrasiNakliye           = Dec(kk, ns, "GirisSonrasiNakliye") ?? 0,
+                        TeknikYardim                  = Dec(kk, ns, "TeknikYardim") ?? 0,
+                        DigerOdemeler                 = Dec(kk, ns, "DigerOdemeler") ?? 0,
+                        DigerOdemelerNiteligi         = Val(kk, ns, "DigerOdemelerNiteligi"),
+                        VergiHarcFon                  = Dec(kk, ns, "VergiHarcFon") ?? 0,
                     })
                     .ToList();
 
                 kiymetBildirim = new EvrimKiymetBildirim
                 {
-                    AliciSaticiAyrintilar = Val(kiymetEl, ns, "AliciSaticiAyrintilar"),
-                    Edim = Val(kiymetEl, ns, "Edim"),
-                    GumrukIdaresiKarari = Val(kiymetEl, ns, "GumrukIdaresiKarari"),
-                    Kisitlamalar = Val(kiymetEl, ns, "Kisitlamalar"),
+                    AliciSaticiAyrintilar  = Val(kiymetEl, ns, "AliciSaticiAyrintilar"),
+                    Edim                   = Val(kiymetEl, ns, "Edim"),
+                    GumrukIdaresiKarari    = Val(kiymetEl, ns, "GumrukIdaresiKarari"),
+                    Kisitlamalar           = Val(kiymetEl, ns, "Kisitlamalar"),
                     KisitlamalarAyrintilar = Val(kiymetEl, ns, "KisitlamalarAyrintilar"),
-                    Munasebet = Val(kiymetEl, ns, "AliciSatici"),
-                    Royalti = Val(kiymetEl, ns, "Royalti"),
-                    RoyaltiKosullar = Val(kiymetEl, ns, "RoyaltiKosullar"),
-                    SaticiyaIntikal = Val(kiymetEl, ns, "SaticiyaIntikal"),
+                    Munasebet              = Val(kiymetEl, ns, "AliciSatici"),
+                    Royalti                = Val(kiymetEl, ns, "Royalti"),
+                    RoyaltiKosullar        = Val(kiymetEl, ns, "RoyaltiKosullar"),
+                    SaticiyaIntikal        = Val(kiymetEl, ns, "SaticiyaIntikal"),
                     SaticiyaIntikalKosullar = Val(kiymetEl, ns, "SaticiyaIntikalKosullar"),
-                    SehirYer = Val(kiymetEl, ns, "SehirYer"),
-                    FaturaTarihiSayisi = Val(kiymetEl, ns, "FaturaTarihiSayisi"),
-                    SozlesmeTarihiSayisi = Val(kiymetEl, ns, "SozlesmeTarihiSayisi"),
-                    Taahutname = Val(kiymetEl, ns, "Taahutname"),
+                    SehirYer               = Val(kiymetEl, ns, "SehirYer"),
+                    FaturaTarihiSayisi     = Val(kiymetEl, ns, "FaturaTarihiSayisi"),
+                    SozlesmeTarihiSayisi   = Val(kiymetEl, ns, "SozlesmeTarihiSayisi"),
+                    Taahutname             = Val(kiymetEl, ns, "Taahutname"),
                     KiymetBildirimKalemler = kiymetKalemler,
                 };
             }
 
+            // ── dosyaTarihi parse: Beyanname_tarihi → yyyy-MM-ddTHH:mm:ss
+            var dosyaTarihiRaw = Val(beyanname, ns, "Beyanname_tarihi")
+                ?? Val(beyanname, ns, "Dosya_tarihi");
+            string? dosyaTarihi = null;
+            if (!string.IsNullOrEmpty(dosyaTarihiRaw))
+            {
+                if (DateTime.TryParseExact(dosyaTarihiRaw, new[] { "dd/MM/yyyy", "yyyy-MM-dd", "yyyy-MM-ddTHH:mm:ss" },
+                    CultureInfo.InvariantCulture, DateTimeStyles.None, out var dtParsed))
+                    dosyaTarihi = dtParsed.ToString("yyyy-MM-ddTHH:mm:ss");
+                else
+                    dosyaTarihi = dosyaTarihiRaw;
+            }
+            // Fallback: bugünün tarihi
+            dosyaTarihi ??= DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss");
+
             return new EvrimDeclarationRequest
             {
                 // Kimlik
-                RefId = gelen.Element("RefID")?.Value?.Trim(),
-                Ihracat = ihracat,
-                DosyaTipi = ihracat ? "H" : "T",
-                RejimKodu = rejimKodu,
-                ReferansNo = Val(beyanname, ns, "Referans_no"),
-                IsTakipKodu = Val(beyanname, ns, "Referans_no"),
+                // refId: Evrim'in Dosya Müşavir Referansı (max 5 karakter, sabit)
+                // dosyaNo: Beyanname numarası (Evrim'de kayıt anahtarı)
+                RefId              = "ORK01",
+                DosyaNo            = Val(beyanname, ns, "Beyanname_no")
+                                     ?? Val(beyanname, ns, "Referans_no"),
+                BeyannameTarihi    = dosyaTarihi,
+                DosyaTarihi        = dosyaTarihi,
+                Ihracat            = ihracat,
+                DosyaTipi          = ihracat ? "H" : "T",
+                RejimKodu          = rejimKodu,
+                ReferansNo         = Val(beyanname, ns, "Referans_no"),
+                IsTakipKodu        = Val(beyanname, ns, "Referans_no"),
                 OlusturanKullanici = Val(beyanname, ns, "Kullanici_kodu"),
 
                 // Müşteri
-                MusteriVergi = musteriVergi,
-                MusteriUnvani = musteriUnvani,
+                MusteriVergi         = musteriVergi,
+                MusteriUnvani        = musteriUnvani,
                 MusteriAccountNumber = musteriVergi,
 
                 // Beyan sahibi (sabit Orko değerleri)
-                BeyanSahibiUnvan = "ORKO GÜMRÜKLEME",
+                BeyanSahibiUnvan  = "ORKO GÜMRÜKLEME",
                 BeyanSahibiVergiNo = Val(beyanname, ns, "Beyan_sahibi_vergi_no"),
-                MusavirVergiNo = Val(beyanname, ns, "Musavir_vergi_no"),
-                KarnSahibiKodu = "02",
+                MusavirVergiNo    = Val(beyanname, ns, "Musavir_vergi_no"),
+                KarnSahibiKodu    = "02",
 
                 // Gümrük
-                Gumruk = Val(beyanname, ns, "GUMRUK"),
+                Gumruk              = Val(beyanname, ns, "GUMRUK"),
                 BasitlestirilmisUsul = Val(beyanname, ns, "Basitlestirilmis_usul"),
-                GirisGumrukIdaresi = Val(beyanname, ns, "Giris_gumruk_idaresi"),
-                VarisGumrukIdaresi = Val(beyanname, ns, "Varis_gumruk_idaresi"),
-                AntrepoKodu = Val(beyanname, ns, "Antrepo_kodu"),
+                GirisGumrukIdaresi  = Val(beyanname, ns, "Giris_gumruk_idaresi"),
+                VarisGumrukIdaresi  = Val(beyanname, ns, "Varis_gumruk_idaresi"),
+                AntrepoKodu         = Val(beyanname, ns, "Antrepo_kodu"),
                 EsyaninBulunduguYer = Val(beyanname, ns, "Esyanin_bulundugu_yer"),
-                LimanKodu = Val(beyanname, ns, "LimanKodu"),
+                LimanKodu           = Val(beyanname, ns, "LimanKodu"),
 
                 // Ülke
                 TicaretUlkesi = Val(beyanname, ns, "Ticaret_ulkesi"),
-                IlkUlke = Val(beyanname, ns, "Cikis_ulkesi"),
-                CikisUlkesi = Val(beyanname, ns, "Cikis_ulkesi"),
-                GidecegiUlke = Val(beyanname, ns, "Gidecegi_ulke"),
-                SevkUlkesi = Val(beyanname, ns, "Gidecegi_sevk_ulkesi"),
-                VarisUlkesi = Val(beyanname, ns, "Gidecegi_sevk_ulkesi"),
+                IlkUlke       = Val(beyanname, ns, "Cikis_ulkesi"),
+                CikisUlkesi   = Val(beyanname, ns, "Cikis_ulkesi"),
+                GidecegiUlke  = Val(beyanname, ns, "Gidecegi_ulke"),
+                SevkUlkesi    = Val(beyanname, ns, "Gidecegi_sevk_ulkesi"),
+                VarisUlkesi   = Val(beyanname, ns, "Gidecegi_sevk_ulkesi"),
 
                 // Araç / Taşıma
-                CikistakiAracinTipi = Val(beyanname, ns, "Cikistaki_aracin_tipi"),
+                CikistakiAracinTipi    = Val(beyanname, ns, "Cikistaki_aracin_tipi"),
                 CikistakiAracinKimligi = Val(beyanname, ns, "Cikistaki_aracin_kimligi"),
-                CikistakiAracinUlkesi = Val(beyanname, ns, "Cikistaki_aracin_ulkesi"),
-                SinirdakiAracinTipi = Val(beyanname, ns, "Sinirdaki_aracin_tipi"),
+                CikistakiAracinUlkesi  = Val(beyanname, ns, "Cikistaki_aracin_ulkesi"),
+                SinirdakiAracinTipi    = Val(beyanname, ns, "Sinirdaki_aracin_tipi"),
                 SinirdakiAracinKimligi = Val(beyanname, ns, "Sinirdaki_aracin_kimligi"),
-                SinirdakiAracinUlkesi = Val(beyanname, ns, "Sinirdaki_aracin_ulkesi"),
-                SinirdakiTasimaSekli = Val(beyanname, ns, "Sinirdaki_tasima_sekli"),
-                TeslimSekli = Val(beyanname, ns, "Teslim_sekli"),
-                TeslimYeri = Val(beyanname, ns, "Teslim_yeri"),
-                Konteyner = konteyner,
+                SinirdakiAracinUlkesi  = Val(beyanname, ns, "Sinirdaki_aracin_ulkesi"),
+                SinirdakiTasimaSekli   = Val(beyanname, ns, "Sinirdaki_tasima_sekli"),
+                TeslimSekli            = Val(beyanname, ns, "Teslim_sekli"),
+                TeslimYeri             = Val(beyanname, ns, "Teslim_yeri"),
+                Konteyner              = konteyner,
 
                 // Finansal
-                ToplamFatura = Dec(beyanname, ns, "Toplam_fatura"),
+                ToplamFatura       = Dec(beyanname, ns, "Toplam_fatura"),
                 ToplamFaturaDovizi = Val(beyanname, ns, "Toplam_fatura_dovizi"),
-                ToplamNavlun = Dec(beyanname, ns, "Toplam_navlun"),
+                ToplamNavlun       = Dec(beyanname, ns, "Toplam_navlun"),
                 ToplamNavlunDovizi = Val(beyanname, ns, "Toplan_navlun_dovizi"),
-                ToplamSigorta = Dec(beyanname, ns, "Toplam_sigorta"),
+                ToplamSigorta      = Dec(beyanname, ns, "Toplam_sigorta"),
                 ToplamSigortaDovizi = Val(beyanname, ns, "Toplam_sigorta_dovizi"),
-                ToplamYurtDisiHarcamalari = Dec(beyanname, ns, "Toplam_yurt_disi_harcamalar"),
+                ToplamYurtDisiHarcamalari       = Dec(beyanname, ns, "Toplam_yurt_disi_harcamalar"),
                 ToplamYurtDisiHarcamalariDovizi = Val(beyanname, ns, "Toplam_yurt_disi_harcamalarin_dovizi"),
-                ToplamYurtIciHarcamalari = Dec(beyanname, ns, "Toplam_yurt_ici_harcamalar"),
-                ToplamBrutAgirlik = toplamBrut,
-                ToplamNetAgirlik = toplamNet,
-                BrutAgirlik = toplamBrut,
-                NetAgirlik = toplamNet,
+                ToplamYurtIciHarcamalari        = Dec(beyanname, ns, "Toplam_yurt_ici_harcamalar"),
+                ToplamBrutAgirlik  = toplamBrut,
+                ToplamNetAgirlik   = toplamNet,
+                BrutAgirlik        = toplamBrut,
+                NetAgirlik         = toplamNet,
                 AliciSaticiIliskisi = Int(beyanname, ns, "Alici_satici_iliskisi"),
 
                 // Kap / Yük
-                KapAdedi = Val(beyanname, ns, "Kap_adedi"),
+                KapAdedi           = Val(beyanname, ns, "Kap_adedi"),
                 YukBelgeleriSayisi = Int(beyanname, ns, "Yuk_belgeleri_sayisi"),
-                YukBelgesi = Int(beyanname, ns, "Yuk_belgeleri_sayisi"),
+                YukBelgesi         = Int(beyanname, ns, "Yuk_belgeleri_sayisi"),
                 YuklemeBosaltmaYeri = Val(beyanname, ns, "Yukleme_bosaltma_yeri"),
 
                 // Ödeme
                 OdemeSekli = Val(beyanname, ns, "Odeme"),
-                BankaKodu = Val(beyanname, ns, "Banka_kodu"),
+                BankaKodu  = Val(beyanname, ns, "Banka_kodu"),
 
                 // Notlar
                 IsleminNiteligi = Val(beyanname, ns, "Islemin_niteligi"),
-                Aciklamalar = Val(beyanname, ns, "Aciklamalar"),
-                SiparisTuru = Val(ilkKalemEl, ns, "SiparisTuru"),
-                TevTutar = Dec(beyanname, ns, "Telafi_edici_vergi"),
-                KkdfMatrah = Dec(ilkKalemEl, ns, "Yurtici_Kkdf"),
+                Aciklamalar     = Val(beyanname, ns, "Aciklamalar"),
+                SiparisTuru     = Val(ilkKalemEl, ns, "SiparisTuru"),
+                TevTutar        = Dec(beyanname, ns, "Telafi_edici_vergi"),
+                KkdfMatrah      = Dec(ilkKalemEl, ns, "Yurtici_Kkdf"),
 
                 // Teminat
-                TeminatSekli = Val(teminatEl, ns, "Teminat_sekli"),
-                TeminatOrani = Dec(teminatEl, ns, "Teminat_orani"),
-                TeminatAciklama = Val(teminatEl, ns, "Aciklama"),
-                TeminatGlobalGarantiNo = Val(teminatEl, ns, "Global_teminat_no"),
+                TeminatSekli               = Val(teminatEl, ns, "Teminat_sekli"),
+                TeminatOrani               = Dec(teminatEl, ns, "Teminat_orani"),
+                TeminatAciklama            = Val(teminatEl, ns, "Aciklama"),
+                TeminatGlobalGarantiNo     = Val(teminatEl, ns, "Global_teminat_no"),
                 TeminatDigerTutarReferansi = Val(teminatEl, ns, "Diger_tutar_referansi"),
-                TeminatOdeme = Dec(teminatEl, ns, "Nakdi_teminat_tutari")?.ToString(CultureInfo.InvariantCulture),
+                TeminatOdeme               = Dec(teminatEl, ns, "Nakdi_teminat_tutari"),
 
                 // Birlik
-                BirlikKayitNumara = Val(beyanname, ns, "Birlik_kayit_numarasi"),
+                BirlikKayitNumara  = Val(beyanname, ns, "Birlik_kayit_numarasi"),
                 BirlikKriptoNumara = Val(beyanname, ns, "Birlik_kripto_numarasi"),
 
                 // Diğer
-                AcentaBildirimNo = Val(beyanname, ns, "AcentaSevkBildirimNo"),
+                AcentaBildirimNo      = Val(beyanname, ns, "AcentaSevkBildirimNo"),
                 GumrukSaymanlikVergiNo = Val(beyanname, ns, "OdeSaymanlikBilgi"),
-                FazlaMesaiTescilNo = Val(beyanname, ns, "FazlaMesaiID"),
+                FazlaMesaiTescilNo    = Val(beyanname, ns, "FazlaMesaiID"),
 
                 // İlişkili objeler
-                Firmalar = firmalar,
-                OzetBeyanlar = ozetBeyanlar,
+                Firmalar          = firmalar,
+                OzetBeyanlar      = ozetBeyanlar,
                 YurtIciHarcamalari = yurtIciBeyanname,
-                KiymetBildirim = kiymetBildirim,
+                KiymetBildirim    = kiymetBildirim,
 
                 Kalemler = kalemler,
             };
