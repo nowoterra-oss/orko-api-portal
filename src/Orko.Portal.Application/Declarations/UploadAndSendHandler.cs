@@ -509,7 +509,7 @@ public class UploadAndSendHandler
                 // Kimlik
                 // refId: Evrim'in Dosya Müşavir Referansı (max 5 karakter, sabit)
                 // dosyaNo: Beyanname numarası (Evrim'de kayıt anahtarı)
-                RefId              = "ORK01",
+                RefId              = null,
                 DosyaNo            = Val(beyanname, ns, "Beyanname_no")
                                      ?? Val(beyanname, ns, "Referans_no"),
                 BeyannameTarihi    = dosyaTarihi,
