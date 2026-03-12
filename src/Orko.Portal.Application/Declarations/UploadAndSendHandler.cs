@@ -520,14 +520,13 @@ public class UploadAndSendHandler
             return new EvrimDeclarationRequest
             {
                 // Kimlik
-                // refId: Evrim'in Dosya Müşavir Referansı (max 5 karakter, sabit)
-                // dosyaNo: Beyanname numarası (Evrim'de kayıt anahtarı)
+                // RefId: her zaman bos gonder
+                // DosyaNo: Referans_no'dan alinir (orn: "2026/IM157")
+                // BeyannameNo: tescilden sonra cevap XML'den gelir (MergeCevapXml)
                 RefId              = null,
                 Aktif              = true,
-                DosyaNo            = Val(beyanname, ns, "Beyanname_no")
-                                     ?? Val(beyanname, ns, "Referans_no"),
-                BeyannameNo        = Val(beyanname, ns, "Beyanname_no")
-                                     ?? Val(beyanname, ns, "Referans_no"),
+                DosyaNo            = Val(beyanname, ns, "Referans_no"),
+                BeyannameNo        = null,
                 BeyannameTarihi    = dosyaTarihi,
                 DosyaTarihi        = dosyaTarihi,
                 Ihracat            = ihracat,
