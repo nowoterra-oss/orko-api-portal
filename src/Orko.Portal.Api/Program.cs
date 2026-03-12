@@ -75,6 +75,11 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new() { Title = "Orko Portal API", Version = "v1" });
+
+    // XML comments (model aciklamalari icin)
+    var infrastructureXml = Path.Combine(AppContext.BaseDirectory, "Orko.Portal.Infrastructure.xml");
+    if (File.Exists(infrastructureXml))
+        c.IncludeXmlComments(infrastructureXml);
     c.AddSecurityDefinition("ApiKey", new OpenApiSecurityScheme
     {
         Name = "X-API-Key",
