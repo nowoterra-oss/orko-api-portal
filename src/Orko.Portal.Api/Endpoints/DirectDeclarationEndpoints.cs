@@ -12,12 +12,12 @@ public static class DirectDeclarationEndpoints
     {
         // POST /api/create_export_declaration
         app.MapPost("/api/create_export_declaration", async (
-            EvrimCreateDeclarationRequest request,
+            EvrimExportDeclarationRequest request,
             CreateDirectDeclarationHandler handler) =>
         {
             try
             {
-                var result = await handler.HandleAsync(request, DeclarationType.Export);
+                var result = await handler.HandleExportAsync(request);
                 return result.Success
                     ? Results.Ok(ApiResponse<object>.Ok(
                         new { result.ReferansNo, result.EvrimReferansNo },
@@ -42,7 +42,7 @@ public static class DirectDeclarationEndpoints
         {
             try
             {
-                var result = await handler.HandleAsync(request, DeclarationType.Import);
+                var result = await handler.HandleImportAsync(request);
                 return result.Success
                     ? Results.Ok(ApiResponse<object>.Ok(
                         new { result.ReferansNo, result.EvrimReferansNo },

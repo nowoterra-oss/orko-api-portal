@@ -13,8 +13,7 @@ namespace Orko.Portal.Application.Declarations;
 
 /// <summary>
 /// Declaration body'sini alir, WorkOrder + Declaration olusturur, Evrim'e gonderir.
-/// Evrim'in create_export_declaration / create_import_declaration endpoint'lerinin aynisi.
-/// Yeni Evrim semasini (EvrimCreateDeclarationRequest) kullanir.
+/// Export icin EvrimExportDeclarationRequest, Import icin EvrimCreateDeclarationRequest kullanir.
 /// </summary>
 public class CreateDirectDeclarationHandler
 {
@@ -41,15 +40,36 @@ public class CreateDirectDeclarationHandler
         _logger = logger;
     }
 
-    public async Task<EvrimResponse> HandleAsync(EvrimCreateDeclarationRequest request, DeclarationType type)
+    public async Task<EvrimResponse> HandleExportAsync(EvrimExportDeclarationRequest request)
     {
-        // Dosya numarasi uret
+        var (workOrder, declaration) = await CreateWorkOrderAndDeclaration(
+            request, DeclarationType.Export);
+
+        var result = await _evrim.CreateNewExportDeclarationAsync(request);
+
+        await SaveEvrimResult(workOrder, declaration, result);
+        return result;
+    }
+
+    public async Task<EvrimResponse> HandleImportAsync(EvrimCreateDeclarationRequest request)
+    {
+        var (workOrder, declaration) = await CreateWorkOrderAndDeclaration(
+            request, DeclarationType.Import);
+
+        var result = await _evrim.CreateNewImportDeclarationAsync(request);
+
+        await SaveEvrimResult(workOrder, declaration, result);
+        return result;
+    }
+
+    private async Task<(WorkOrder workOrder, Declaration declaration)> CreateWorkOrderAndDeclaration(
+        object request, DeclarationType type)
+    {
         var today = DateTime.UtcNow;
         var count = await _db.WorkOrders
             .CountAsync(w => w.CreatedAt.Date == today.Date);
         var fileNumber = $"ORK-{today:yyyyMMdd}-{(count + 1):D4}";
 
-        // Is emri olustur
         var workOrder = new WorkOrder
         {
             Id = Guid.NewGuid(),
@@ -60,7 +80,6 @@ public class CreateDirectDeclarationHandler
             UpdatedAt = today
         };
 
-        // Beyanname olustur ve veriyi kaydet
         var declaration = new Declaration
         {
             Id = Guid.NewGuid(),
@@ -80,17 +99,13 @@ public class CreateDirectDeclarationHandler
             "Direct declaration olusturuldu: {FileNumber} | Tip: {Type}",
             fileNumber, type);
 
-        // E-posta bildirimi (arka planda)
         _jobs.Enqueue<WorkOrderEmailNotificationJob>(job => job.ExecuteAsync(workOrder.Id));
 
-        // Evrim'e gonder (yeni endpoint'ler)
-        EvrimResponse result;
-        if (type == DeclarationType.Export)
-            result = await _evrim.CreateNewExportDeclarationAsync(request);
-        else
-            result = await _evrim.CreateNewImportDeclarationAsync(request);
+        return (workOrder, declaration);
+    }
 
-        // Sonucu kaydet
+    private async Task SaveEvrimResult(WorkOrder workOrder, Declaration declaration, EvrimResponse result)
+    {
         declaration.SentToEvrim = result.Success;
         declaration.SentAt = DateTime.UtcNow;
         declaration.EvrimResponse = result.RawResponse;
@@ -118,8 +133,6 @@ public class CreateDirectDeclarationHandler
 
         _logger.LogInformation(
             "Direct declaration Evrim sonuc: {FileNumber} | Basarili: {Success} | Ref: {Ref}",
-            fileNumber, result.Success, result.EvrimReferansNo);
-
-        return result;
+            workOrder.FileNumber, result.Success, result.EvrimReferansNo);
     }
 }
