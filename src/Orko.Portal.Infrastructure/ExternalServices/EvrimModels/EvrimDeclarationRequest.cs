@@ -11,6 +11,9 @@ public class EvrimDeclarationRequest
     [JsonPropertyName("refId")]
     public string? RefId { get; set; }
 
+    [JsonPropertyName("aktif")]
+    public bool? Aktif { get; set; }  // true: aktif beyanname
+
     [JsonPropertyName("dosyaTipi")]
     public string? DosyaTipi { get; set; }  // T: Ithalat, H: Ihracat, T-ANT: Antrepo
 

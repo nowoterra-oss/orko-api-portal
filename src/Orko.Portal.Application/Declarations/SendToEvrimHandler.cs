@@ -122,16 +122,35 @@ public class SendToEvrimHandler
         evrimRequest.ReferansNo ??= declaration.WorkOrder.SelsilOrderId ?? declaration.WorkOrder.FileNumber;
         evrimRequest.DosyaNo ??= declaration.WorkOrder.FileNumber;
 
+        // Aktif: her zaman true
+        evrimRequest.Aktif = true;
+
+        // RefId: bos gonder
+        evrimRequest.RefId = null;
+
+        // DosyaTipi: H=Ihracat, T=Ithalat
         if (declaration.DeclarationType == DeclarationType.Export)
+        {
+            evrimRequest.DosyaTipi = "H";
             evrimRequest.Ihracat = true;
+        }
         else
+        {
+            evrimRequest.DosyaTipi = "T";
             evrimRequest.Ihracat = null;
+        }
+
+        // BeyannameNo: dosya numarasi ile doldur
+        evrimRequest.BeyannameNo ??= declaration.WorkOrder.FileNumber;
 
         CleanEmptyStrings(evrimRequest);
         if (evrimRequest.Kalemler != null)
         {
             foreach (var kalem in evrimRequest.Kalemler)
+            {
                 CleanEmptyStrings(kalem);
+                // Kalem vergilerini koru (CleanEmptyStrings listeleere dokunmaz)
+            }
         }
 
         var missingFields = new List<string>();
