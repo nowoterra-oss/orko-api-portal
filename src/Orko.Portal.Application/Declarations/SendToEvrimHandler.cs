@@ -15,6 +15,12 @@ public class SendToEvrimHandler
     private readonly IEvrimApiClient _evrim;
     private readonly ILogger<SendToEvrimHandler> _logger;
 
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+        DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+    };
+
     public SendToEvrimHandler(PortalDbContext db, IEvrimApiClient evrim, ILogger<SendToEvrimHandler> logger)
     {
         _db = db;
@@ -37,66 +43,29 @@ public class SendToEvrimHandler
         if (string.IsNullOrEmpty(declaration.DeclarationData))
             throw new InvalidOperationException("Beyanname verileri bos. Once formu doldurun.");
 
-        // JSON'dan Evrim Declaration modeline donustur
-        EvrimDeclarationRequest evrimRequest;
-        try
-        {
-            evrimRequest = JsonSerializer.Deserialize<EvrimDeclarationRequest>(
-                declaration.DeclarationData,
-                new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
-                ?? new EvrimDeclarationRequest();
-        }
-        catch (JsonException)
-        {
-            // Eski format ise wrapper olarak gonder
-            evrimRequest = new EvrimDeclarationRequest
-            {
-                ReferansNo = declaration.WorkOrder.FileNumber,
-                Aciklamalar = declaration.DeclarationData
-            };
-        }
+        // Format tespit: yeni mi eski mi?
+        var format = DetectFormat(declaration.DeclarationData);
 
-        // Referans numarasi: Selsil referansi, yoksa dosya numarasi
-        evrimRequest.ReferansNo ??= declaration.WorkOrder.SelsilOrderId ?? declaration.WorkOrder.FileNumber;
-        evrimRequest.DosyaNo ??= declaration.WorkOrder.FileNumber;
-
-        // ihracat sadece export ise true olarak gonder, import ise null birak (json'dan exclude edilir)
-        if (declaration.DeclarationType == DeclarationType.Export)
-            evrimRequest.Ihracat = true;
-        else
-            evrimRequest.Ihracat = null;
-
-        // Bos stringleri null yap (WhenWritingNull ile json'dan exclude edilsinler)
-        CleanEmptyStrings(evrimRequest);
-        if (evrimRequest.Kalemler != null)
-        {
-            foreach (var kalem in evrimRequest.Kalemler)
-                CleanEmptyStrings(kalem);
-        }
-
-        // Zorunlu alan kontrolu
-        var missingFields = new List<string>();
-        if (string.IsNullOrEmpty(evrimRequest.DosyaNo)) missingFields.Add("dosyaNo (Beyanname No)");
-        if (string.IsNullOrEmpty(evrimRequest.DosyaTarihi)) missingFields.Add("dosyaTarihi (Beyanname Tarihi)");
-        if (string.IsNullOrEmpty(evrimRequest.Gumruk)) missingFields.Add("gumruk");
-        if (string.IsNullOrEmpty(evrimRequest.MusteriVergi)) missingFields.Add("musteriVergi");
-        if (string.IsNullOrEmpty(evrimRequest.MusteriUnvani)) missingFields.Add("musteriUnvani");
-        if (evrimRequest.ToplamFatura is null or 0) missingFields.Add("toplamFatura");
-        if (evrimRequest.Kalemler == null || evrimRequest.Kalemler.Count == 0) missingFields.Add("kalemler");
-
-        if (missingFields.Count > 0)
-            throw new InvalidOperationException(
-                $"Beyanname verileri eksik. Lutfen formu doldurun. Eksik alanlar: {string.Join(", ", missingFields)}");
-
-        // Evrim'e gonder (tip'e gore import/export)
         EvrimResponse result;
-        if (declaration.DeclarationType == DeclarationType.Export)
+
+        if (format == DataFormat.NewExport)
         {
-            result = await _evrim.CreateExportDeclarationAsync(evrimRequest);
+            // Yeni export formati - olduğu gibi gonder
+            var request = JsonSerializer.Deserialize<EvrimExportDeclarationRequest>(
+                declaration.DeclarationData, JsonOptions) ?? new EvrimExportDeclarationRequest();
+            result = await _evrim.CreateExportDeclarationAsync(request);
+        }
+        else if (format == DataFormat.NewImport)
+        {
+            // Yeni import formati - olduğu gibi gonder
+            var request = JsonSerializer.Deserialize<EvrimCreateDeclarationRequest>(
+                declaration.DeclarationData, JsonOptions) ?? new EvrimCreateDeclarationRequest();
+            result = await _evrim.CreateImportDeclarationAsync(request);
         }
         else
         {
-            result = await _evrim.CreateImportDeclarationAsync(evrimRequest);
+            // Eski format - mevcut davranis
+            result = await SendOldFormat(declaration);
         }
 
         // Sonucu kaydet
@@ -126,15 +95,89 @@ public class SendToEvrimHandler
         await _db.SaveChangesAsync();
 
         _logger.LogInformation(
-            "Evrim gonderim: {FileNumber} | Basarili: {Success} | EvrimRef: {Ref} | Mesaj: {Msg}",
-            declaration.WorkOrder.FileNumber, result.Success, result.EvrimReferansNo, result.ExceptionMessage);
+            "Evrim gonderim: {FileNumber} | Format: {Format} | Basarili: {Success} | EvrimRef: {Ref} | Mesaj: {Msg}",
+            declaration.WorkOrder.FileNumber, format, result.Success, result.EvrimReferansNo, result.ExceptionMessage);
 
         return result;
     }
 
-    /// <summary>
-    /// Bos string property'leri null yapar, WhenWritingNull ile json'dan exclude edilir
-    /// </summary>
+    private async Task<EvrimResponse> SendOldFormat(Domain.Entities.Declaration declaration)
+    {
+        EvrimDeclarationRequest evrimRequest;
+        try
+        {
+            evrimRequest = JsonSerializer.Deserialize<EvrimDeclarationRequest>(
+                declaration.DeclarationData!, JsonOptions)
+                ?? new EvrimDeclarationRequest();
+        }
+        catch (JsonException)
+        {
+            evrimRequest = new EvrimDeclarationRequest
+            {
+                ReferansNo = declaration.WorkOrder.FileNumber,
+                Aciklamalar = declaration.DeclarationData
+            };
+        }
+
+        evrimRequest.ReferansNo ??= declaration.WorkOrder.SelsilOrderId ?? declaration.WorkOrder.FileNumber;
+        evrimRequest.DosyaNo ??= declaration.WorkOrder.FileNumber;
+
+        if (declaration.DeclarationType == DeclarationType.Export)
+            evrimRequest.Ihracat = true;
+        else
+            evrimRequest.Ihracat = null;
+
+        CleanEmptyStrings(evrimRequest);
+        if (evrimRequest.Kalemler != null)
+        {
+            foreach (var kalem in evrimRequest.Kalemler)
+                CleanEmptyStrings(kalem);
+        }
+
+        var missingFields = new List<string>();
+        if (string.IsNullOrEmpty(evrimRequest.DosyaNo)) missingFields.Add("dosyaNo (Beyanname No)");
+        if (string.IsNullOrEmpty(evrimRequest.DosyaTarihi)) missingFields.Add("dosyaTarihi (Beyanname Tarihi)");
+        if (string.IsNullOrEmpty(evrimRequest.Gumruk)) missingFields.Add("gumruk");
+        if (string.IsNullOrEmpty(evrimRequest.MusteriVergi)) missingFields.Add("musteriVergi");
+        if (string.IsNullOrEmpty(evrimRequest.MusteriUnvani)) missingFields.Add("musteriUnvani");
+        if (evrimRequest.ToplamFatura is null or 0) missingFields.Add("toplamFatura");
+        if (evrimRequest.Kalemler == null || evrimRequest.Kalemler.Count == 0) missingFields.Add("kalemler");
+
+        if (missingFields.Count > 0)
+            throw new InvalidOperationException(
+                $"Beyanname verileri eksik. Lutfen formu doldurun. Eksik alanlar: {string.Join(", ", missingFields)}");
+
+        if (declaration.DeclarationType == DeclarationType.Export)
+            return await _evrim.CreateExportDeclarationAsync(evrimRequest);
+        else
+            return await _evrim.CreateImportDeclarationAsync(evrimRequest);
+    }
+
+    private enum DataFormat { OldFormat, NewExport, NewImport }
+
+    private static DataFormat DetectFormat(string json)
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(json);
+            var root = doc.RootElement;
+
+            // Yeni export: "Rejim" veya "Kalemler" (buyuk K) alanlari var
+            if (root.TryGetProperty("Rejim", out _) || root.TryGetProperty("Kalemler", out _))
+                return DataFormat.NewExport;
+
+            // Yeni import: "RegimeCode" veya "Details" alanlari var
+            if (root.TryGetProperty("RegimeCode", out _) || root.TryGetProperty("Details", out _))
+                return DataFormat.NewImport;
+
+            return DataFormat.OldFormat;
+        }
+        catch
+        {
+            return DataFormat.OldFormat;
+        }
+    }
+
     private static void CleanEmptyStrings(object obj)
     {
         foreach (var prop in obj.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
