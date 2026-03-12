@@ -218,8 +218,10 @@ public class UploadAndSendHandler
                 ?? throw new InvalidOperationException("BeyannameBilgi elementi bulunamadi.");
 
             var rejimKodu = Val(beyanname, ns, "Rejim");
-            // Rejim 3xxx → ihracat (true), 4xxx/5xxx → ithalat (null)
-            var isExport = rejimKodu?.Length > 0 && rejimKodu[0] == '3';
+            var referansNo = Val(beyanname, ns, "Referans_no");
+            // Rejim 3xxx → ihracat, veya Referans_no "EX" iceriyorsa ihracat
+            var isExport = (rejimKodu?.Length > 0 && rejimKodu[0] == '3')
+                        || (referansNo != null && referansNo.Contains("/EX", StringComparison.OrdinalIgnoreCase));
             bool? ihracat = isExport ? true : null;
 
             // ── Müşteri ünvanı: Önce Firma_bilgi > Adi_unvani dene (Alici > DigerGonderici > Gonderici sırası)
@@ -526,15 +528,15 @@ public class UploadAndSendHandler
                 // BeyannameNo: tescilden sonra cevap XML'den gelir (MergeCevapXml)
                 RefId              = null,
                 Aktif              = true,
-                DosyaNo            = Val(beyanname, ns, "Referans_no"),
+                DosyaNo            = referansNo,
                 BeyannameNo        = null,
                 BeyannameTarihi    = dosyaTarihi,
                 DosyaTarihi        = dosyaTarihi,
                 Ihracat            = ihracat,
                 DosyaTipi          = isExport ? "H" : "T",
                 RejimKodu          = rejimKodu,
-                ReferansNo         = Val(beyanname, ns, "Referans_no"),
-                IsTakipKodu        = Val(beyanname, ns, "Referans_no"),
+                ReferansNo         = referansNo,
+                IsTakipKodu        = referansNo,
                 OlusturanKullanici = Val(beyanname, ns, "Kullanici_kodu"),
 
                 // Müşteri
