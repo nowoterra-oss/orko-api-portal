@@ -31,7 +31,7 @@ public static class DirectDeclarationEndpoints
             }
         })
         .WithName("CreateExportDeclaration")
-        .WithTags("Beyanname Olustur")
+        .WithTags("Is Emirleri")
         .Produces<ApiResponse<object>>(200)
         .Produces<ApiResponse<object>>(400);
 
@@ -56,7 +56,7 @@ public static class DirectDeclarationEndpoints
             }
         })
         .WithName("CreateImportDeclaration")
-        .WithTags("Beyanname Olustur")
+        .WithTags("Is Emirleri")
         .Produces<ApiResponse<object>>(200)
         .Produces<ApiResponse<object>>(400);
     }

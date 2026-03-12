@@ -10,24 +10,6 @@ public static class WorkOrderEndpoints
     {
         var group = app.MapGroup("/api/work-orders").WithTags("Is Emirleri");
 
-        // Selsil is emri gonderir -> taslak beyanname olusur -> dosya no doner
-        group.MapPost("/", async (CreateWorkOrderDto dto, CreateWorkOrderHandler handler) =>
-        {
-            try
-            {
-                var result = await handler.HandleAsync(dto);
-                return Results.Created($"/api/work-orders/{result.FileNumber}",
-                    ApiResponse<WorkOrderResponseDto>.Ok(result));
-            }
-            catch (ArgumentException ex)
-            {
-                return Results.BadRequest(ApiResponse<object>.Fail(ex.Message));
-            }
-        })
-        .WithName("CreateWorkOrder")
-        .Produces<ApiResponse<WorkOrderResponseDto>>(201)
-        .Produces<ApiResponse<object>>(400);
-
         // Is emri listesi (dashboard icin)
         group.MapGet("/", async (
             GetWorkOrdersHandler handler,
