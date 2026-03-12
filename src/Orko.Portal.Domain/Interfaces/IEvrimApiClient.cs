@@ -9,6 +9,10 @@ public interface IEvrimApiClient
     Task<EvrimResponse> CreateWorkOrderAsync(object request);
     Task<EvrimResponse> SendWorkOrderAsync(object request);
     Task<EvrimResponse> SendWorkOrderArchiveAsync(object request);
+
+    // Yeni Evrim API endpoint'leri
+    Task<EvrimResponse> CreateNewExportDeclarationAsync(object request);
+    Task<EvrimResponse> CreateNewImportDeclarationAsync(object request);
 }
 
 /// <summary>

@@ -68,6 +68,7 @@ builder.Services.AddScoped<UploadAndSendHandler>();
 builder.Services.AddScoped<UpdateStatusHandler>();
 builder.Services.AddScoped<UploadArchiveHandler>();
 builder.Services.AddScoped<DashboardHandler>();
+builder.Services.AddScoped<CreateDirectDeclarationHandler>();
 
 // --- Swagger ---
 builder.Services.AddEndpointsApiExplorer();
@@ -144,6 +145,7 @@ app.MapArchiveEndpoints();
 app.MapDashboardEndpoints();
 app.MapLogEndpoints();
 app.MapSettingsEndpoints();
+app.MapDirectDeclarationEndpoints();
 
 app.MapHangfireDashboard("/hangfire", new Hangfire.DashboardOptions
 {

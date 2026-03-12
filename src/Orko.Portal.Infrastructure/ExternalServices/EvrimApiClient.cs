@@ -96,6 +96,13 @@ public class EvrimApiClient : IEvrimApiClient
     public async Task<EvrimResponse> UpdateStatusAsync(object request)
         => await CreateStatusAsync(request);
 
+    // Yeni Evrim API endpoint'leri
+    public async Task<EvrimResponse> CreateNewExportDeclarationAsync(object request)
+        => await SendAsync("api/create_export_declaration", request, "NewExport-Create");
+
+    public async Task<EvrimResponse> CreateNewImportDeclarationAsync(object request)
+        => await SendAsync("api/create_import_declaration", request, "NewImport-Create");
+
     private async Task<EvrimResponse> SendAsync(string endpoint, object request, string operationType)
     {
         var sw = Stopwatch.StartNew();
@@ -156,11 +163,37 @@ public class EvrimApiClient : IEvrimApiClient
             var result = JsonSerializer.Deserialize<EvrimResponse>(responseBody,
                 new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
-            return result ?? new EvrimResponse
+            if (result == null)
             {
-                Success = true,
-                RawResponse = responseBody
-            };
+                return new EvrimResponse
+                {
+                    Success = true,
+                    RawResponse = responseBody
+                };
+            }
+
+            result.RawResponse = responseBody;
+
+            // Yeni Evrim ResponseObject formatini da destekle (Basarili/Mesaj/Sonuc)
+            try
+            {
+                using var doc = JsonDocument.Parse(responseBody);
+                var root = doc.RootElement;
+                if (root.TryGetProperty("Basarili", out var basariliProp))
+                {
+                    result.Success = basariliProp.GetBoolean();
+                    if (root.TryGetProperty("Mesaj", out var mesajProp))
+                        result.ExceptionMessage = mesajProp.GetString();
+                    if (root.TryGetProperty("Sonuc", out var sonucProp))
+                        result.EvrimReferansNo = sonucProp.GetString();
+                }
+            }
+            catch
+            {
+                // Eski format, zaten parse edildi
+            }
+
+            return result;
         }
         catch (Exception ex)
         {
