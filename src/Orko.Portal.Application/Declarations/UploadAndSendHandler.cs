@@ -138,10 +138,15 @@ public class UploadAndSendHandler
         var sonuc = sonucDoc.Root;
         if (sonuc == null) return;
 
-        // Beyanname_no → DosyaNo
+        // Beyanname_no → BeyannameNo (resmi beyanname numarasi, cevap XML'den gelir)
         var beyannameNo = sonuc.Element(sonucNs + "Beyanname_no")?.Value?.Trim();
-        if (!string.IsNullOrEmpty(beyannameNo) && string.IsNullOrEmpty(request.DosyaNo))
-            request.DosyaNo = beyannameNo;
+        if (!string.IsNullOrEmpty(beyannameNo))
+        {
+            request.BeyannameNo = beyannameNo;
+            // DosyaNo bos ise de doldur
+            if (string.IsNullOrEmpty(request.DosyaNo))
+                request.DosyaNo = beyannameNo;
+        }
 
         // Tescil_tarihi → DosyaTarihi
         var tescilTarihi = sonuc.Element(sonucNs + "Tescil_tarihi")?.Value?.Trim();
