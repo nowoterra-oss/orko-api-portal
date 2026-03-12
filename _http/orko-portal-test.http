@@ -464,3 +464,134 @@
   # NOT: Admin JWT token ile erisim saglaniyor
   # GET http://localhost:5045/hangfire
   # Authorization: Bearer {{login.response.body.data.token}}
+
+  ### ============================================================
+  ### 12. DOGRUDAN BEYANNAME (DIRECT DECLARATION - Evrim API)
+  ### ============================================================
+  ### Evrim API'ye dogrudan beyanname gondermek icin kullanilir.
+  ### Export ve Import icin ayri sema ve endpoint kullanilir.
+  ### ============================================================
+
+  ### 12a. Ihracat Beyannamesi (Export Declaration) - Asgari Alanlar
+  POST {{baseUrl}}/create_export_declaration
+  Content-Type: application/json
+  X-API-Key: {{apiKey}}
+
+  {
+    "Rejim": "1000",
+    "siparisTuru": "Normal",
+    "Gumruk": 340300,
+    "Teslim_sekli": "FOB",
+    "Teslim_yeri": "Mersin",
+    "Toplam_fatura": 48500.00,
+    "Toplam_fatura_dovizi": "USD",
+    "Gidecegi_ulke": "GB",
+    "Gidecegi_sevk_ulkesi": "GB",
+    "Cikis_ulkesi": "TR",
+    "Ticaret_ulkesi": "GB",
+    "Odeme_sekli": 1,
+    "Banka_kodu": "0046",
+    "Kap_adedi": "25",
+    "Sinirdaki_tasima_sekli": "10",
+    "Firma_Bilgi": [
+      {
+        "Tip": "yurtIciMusteri",
+        "VKN": "5678901234"
+      },
+      {
+        "Tip": "yurtDisiMusteri",
+        "VKN": "GB123456789"
+      }
+    ],
+    "Kalemler": [
+      {
+        "Detay_No": 1,
+        "Gtip": "5209.42.00.00.00",
+        "Mensei_ulke": "TR",
+        "Kalem_FOB_Tutar": 48500.00,
+        "Net_agirlik": 11500.00,
+        "Brut_agirlik": 12000.00,
+        "Istatistiki_miktar": 25000,
+        "Miktar_birimi": "MTR",
+        "Miktar": 25000,
+        "Ticari_tanimi": "Pamuklu denim kumas, indigo boyali",
+        "FaturaNo": "EXP-2026-089",
+        "Fatura_Tarihi": "2026-03-10"
+      }
+    ]
+  }
+
+  ### 12b. Ithalat Beyannamesi (Import Declaration) - Asgari Alanlar
+  POST {{baseUrl}}/create_import_declaration
+  Content-Type: application/json
+  X-API-Key: {{apiKey}}
+
+  {
+    "RefNo": "ORK-IMP-2026-001",
+    "dosyaTipi": "T",
+    "RegimeCode": "4000",
+    "Gumruk": 340100,
+    "IncotermCode": "CIF",
+    "Teslim_yeri": "Istanbul",
+    "Toplam_fatura": 125000.00,
+    "CurrencyTypeCode": "EUR",
+    "Freight": 3500.00,
+    "FreightCurrencyType": "EUR",
+    "Insurance": 625.00,
+    "InsuranceCurrencyType": "EUR",
+    "ExitCountryCode": "DE",
+    "ToCountryCode": "TR",
+    "ExportFromCountryCode": "DE",
+    "PaymentTypeCode": 1,
+    "BankCode": "0046",
+    "Kap_adedi": "4",
+    "BorderVehicleTypeCode": "10",
+    "Toplam_Brut_agirlik": 8500.00,
+    "Toplam_Net_agirlik": 7200.00,
+    "Firma_Bilgi": [
+      {
+        "Tip": "yurtIciMusteri",
+        "VKN": "1234567890"
+      },
+      {
+        "Tip": "yurtDisiMusteri",
+        "VKN": "DE987654321"
+      }
+    ],
+    "Details": [
+      {
+        "Detay_No": 1,
+        "Gtip": "8458.11.20.00.00",
+        "ItemCountryOfOriginCode": "DE",
+        "GrossWeight": 5000.00,
+        "NetWeight": 4200.00,
+        "TotalAmount": 85000.00,
+        "AmountOfMeasure": 1,
+        "UnitOfMeasure": "C62",
+        "ItemQuantity": 1,
+        "Doviz": "EUR",
+        "Navlun_miktari": 2000.00,
+        "Sigorta_miktari": 425.00,
+        "FaturaNo": "INV-2026-4521",
+        "Fatura_Tarihi": "2026-03-05",
+        "EsyaTanimi1": "CNC Yatay Torna Tezgahi"
+      },
+      {
+        "Detay_No": 2,
+        "Gtip": "8466.93.50.00.00",
+        "ItemCountryOfOriginCode": "DE",
+        "GrossWeight": 3500.00,
+        "NetWeight": 3000.00,
+        "TotalAmount": 40000.00,
+        "AmountOfMeasure": 2,
+        "UnitOfMeasure": "C62",
+        "ItemQuantity": 2,
+        "Doviz": "EUR",
+        "Navlun_miktari": 1500.00,
+        "Sigorta_miktari": 200.00,
+        "FaturaNo": "INV-2026-4521",
+        "Fatura_Tarihi": "2026-03-05",
+        "EsyaTanimi1": "CNC Tezgah Yedek Parca Seti"
+      }
+    ]
+  }

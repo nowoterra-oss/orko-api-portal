@@ -13,9 +13,14 @@ public class ApiKeyAuthMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
-        // Sadece /api/work-orders POST icin API Key kontrolu (Selsil)
-        if (context.Request.Path.StartsWithSegments("/api/work-orders") &&
-            context.Request.Method == "POST")
+        // API Key kontrolu: Selsil ve Direct Declaration endpointleri
+        var path = context.Request.Path;
+        var isApiKeyRequired = context.Request.Method == "POST" && (
+            path.StartsWithSegments("/api/work-orders") ||
+            path.StartsWithSegments("/api/create_export_declaration") ||
+            path.StartsWithSegments("/api/create_import_declaration"));
+
+        if (isApiKeyRequired)
         {
             if (!context.Request.Headers.TryGetValue("X-API-Key", out var extractedApiKey) ||
                 extractedApiKey != _apiKey)
