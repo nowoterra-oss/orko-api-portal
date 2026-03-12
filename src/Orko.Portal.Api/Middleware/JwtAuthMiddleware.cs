@@ -51,9 +51,11 @@ public class JwtAuthMiddleware
             }
         }
 
-        // POST /api/work-orders uses API key auth (Selsil integration) - skip JWT
-        if (path.StartsWith("/api/work-orders", StringComparison.OrdinalIgnoreCase) &&
-            context.Request.Method == "POST")
+        // POST /api/work-orders ve direct declaration endpointleri API key auth kullanir - skip JWT
+        if (context.Request.Method == "POST" && (
+            path.StartsWith("/api/work-orders", StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith("/api/create_export_declaration", StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith("/api/create_import_declaration", StringComparison.OrdinalIgnoreCase)))
         {
             await _next(context);
             return;
