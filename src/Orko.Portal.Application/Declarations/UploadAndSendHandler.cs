@@ -607,7 +607,7 @@ public class UploadAndSendHandler
 
                 // Teminat
                 TeminatSekli               = Val(teminatEl, ns, "Teminat_sekli"),
-                TeminatOrani               = Dec(teminatEl, ns, "Teminat_orani"),
+                TeminatOrani               = (int?)(Dec(teminatEl, ns, "Teminat_orani")),
                 TeminatAciklama            = Val(teminatEl, ns, "Aciklama"),
                 TeminatGlobalGarantiNo     = Val(teminatEl, ns, "Global_teminat_no"),
                 TeminatDigerTutarReferansi = Val(teminatEl, ns, "Diger_tutar_referansi"),

@@ -232,7 +232,7 @@ public class EvrimDeclarationRequest
     public string? TeminatSekli { get; set; }
 
     [JsonPropertyName("teminatOrani")]
-    public decimal? TeminatOrani { get; set; }
+    public int? TeminatOrani { get; set; }  // Evrim Integer bekler
 
     [JsonPropertyName("teminatAciklama")]
     public string? TeminatAciklama { get; set; }
