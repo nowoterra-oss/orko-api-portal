@@ -1,7 +1,5 @@
 using Orko.Portal.Application.Declarations;
 using Orko.Portal.Contracts.Common;
-using Orko.Portal.Domain.Enums;
-using Orko.Portal.Domain.Interfaces;
 using Orko.Portal.Infrastructure.ExternalServices.EvrimModels;
 
 namespace Orko.Portal.Api.Endpoints;
@@ -18,14 +16,11 @@ public static class DirectDeclarationEndpoints
             try
             {
                 var result = await handler.HandleExportAsync(request);
-                return result.Success
-                    ? Results.Ok(ApiResponse<object>.Ok(
-                        new { result.ReferansNo, result.EvrimReferansNo },
-                        "Ihracat beyannnamesi basariyla olusturuldu ve Evrim'e gonderildi."))
-                    : Results.BadRequest(ApiResponse<object>.Fail(
-                        $"Evrim gonderilemedi: {result.Message}"));
+                return Results.Ok(ApiResponse<object>.Ok(
+                    new { result.FileNumber, result.WorkOrderId, result.DeclarationId },
+                    "Ihracat is emri basariyla olusturuldu."));
             }
-            catch (InvalidOperationException ex)
+            catch (Exception ex)
             {
                 return Results.BadRequest(ApiResponse<object>.Fail(ex.Message));
             }
@@ -44,14 +39,11 @@ public static class DirectDeclarationEndpoints
             try
             {
                 var result = await handler.HandleImportAsync(request);
-                return result.Success
-                    ? Results.Ok(ApiResponse<object>.Ok(
-                        new { result.ReferansNo, result.EvrimReferansNo },
-                        "Ithalat beyannnamesi basariyla olusturuldu ve Evrim'e gonderildi."))
-                    : Results.BadRequest(ApiResponse<object>.Fail(
-                        $"Evrim gonderilemedi: {result.Message}"));
+                return Results.Ok(ApiResponse<object>.Ok(
+                    new { result.FileNumber, result.WorkOrderId, result.DeclarationId },
+                    "Ithalat is emri basariyla olusturuldu."));
             }
-            catch (InvalidOperationException ex)
+            catch (Exception ex)
             {
                 return Results.BadRequest(ApiResponse<object>.Fail(ex.Message));
             }

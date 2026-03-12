@@ -4,7 +4,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Orko.Portal.Domain.Entities;
 using Orko.Portal.Domain.Enums;
-using Orko.Portal.Domain.Interfaces;
 using Orko.Portal.Infrastructure.BackgroundJobs;
 using Orko.Portal.Infrastructure.ExternalServices.EvrimModels;
 using Orko.Portal.Infrastructure.Persistence;
@@ -12,13 +11,12 @@ using Orko.Portal.Infrastructure.Persistence;
 namespace Orko.Portal.Application.Declarations;
 
 /// <summary>
-/// Declaration body'sini alir, WorkOrder + Declaration olusturur, Evrim'e gonderir.
-/// Export icin EvrimExportDeclarationRequest, Import icin EvrimCreateDeclarationRequest kullanir.
+/// Disaridan gelen is emri verisini alir, WorkOrder + Declaration olusturur.
+/// Evrim'e gonderme ayri adimda yapilir (declarations/{id}/send).
 /// </summary>
 public class CreateDirectDeclarationHandler
 {
     private readonly PortalDbContext _db;
-    private readonly IEvrimApiClient _evrim;
     private readonly IBackgroundJobClient _jobs;
     private readonly ILogger<CreateDirectDeclarationHandler> _logger;
 
@@ -30,39 +28,27 @@ public class CreateDirectDeclarationHandler
 
     public CreateDirectDeclarationHandler(
         PortalDbContext db,
-        IEvrimApiClient evrim,
         IBackgroundJobClient jobs,
         ILogger<CreateDirectDeclarationHandler> logger)
     {
         _db = db;
-        _evrim = evrim;
         _jobs = jobs;
         _logger = logger;
     }
 
-    public async Task<EvrimResponse> HandleExportAsync(EvrimExportDeclarationRequest request)
+    public record DirectDeclarationResult(string FileNumber, Guid WorkOrderId, Guid DeclarationId);
+
+    public async Task<DirectDeclarationResult> HandleExportAsync(EvrimExportDeclarationRequest request)
     {
-        var (workOrder, declaration) = await CreateWorkOrderAndDeclaration(
-            request, DeclarationType.Export);
-
-        var result = await _evrim.CreateNewExportDeclarationAsync(request);
-
-        await SaveEvrimResult(workOrder, declaration, result);
-        return result;
+        return await CreateWorkOrderAndDeclaration(request, DeclarationType.Export);
     }
 
-    public async Task<EvrimResponse> HandleImportAsync(EvrimCreateDeclarationRequest request)
+    public async Task<DirectDeclarationResult> HandleImportAsync(EvrimCreateDeclarationRequest request)
     {
-        var (workOrder, declaration) = await CreateWorkOrderAndDeclaration(
-            request, DeclarationType.Import);
-
-        var result = await _evrim.CreateNewImportDeclarationAsync(request);
-
-        await SaveEvrimResult(workOrder, declaration, result);
-        return result;
+        return await CreateWorkOrderAndDeclaration(request, DeclarationType.Import);
     }
 
-    private async Task<(WorkOrder workOrder, Declaration declaration)> CreateWorkOrderAndDeclaration(
+    private async Task<DirectDeclarationResult> CreateWorkOrderAndDeclaration(
         object request, DeclarationType type)
     {
         var today = DateTime.UtcNow;
@@ -85,7 +71,7 @@ public class CreateDirectDeclarationHandler
             Id = Guid.NewGuid(),
             WorkOrderId = workOrder.Id,
             DeclarationType = type,
-            DeclarationData = JsonSerializer.Serialize(request, JsonOptions),
+            DeclarationData = JsonSerializer.Serialize(request, request.GetType(), JsonOptions),
             Status = WorkOrderStatus.Hazirlaniyor,
             CreatedAt = today,
             UpdatedAt = today
@@ -101,38 +87,6 @@ public class CreateDirectDeclarationHandler
 
         _jobs.Enqueue<WorkOrderEmailNotificationJob>(job => job.ExecuteAsync(workOrder.Id));
 
-        return (workOrder, declaration);
-    }
-
-    private async Task SaveEvrimResult(WorkOrder workOrder, Declaration declaration, EvrimResponse result)
-    {
-        declaration.SentToEvrim = result.Success;
-        declaration.SentAt = DateTime.UtcNow;
-        declaration.EvrimResponse = result.RawResponse;
-        declaration.EvrimDeclarationId = result.EvrimReferansNo;
-
-        if (result.Success)
-        {
-            declaration.Status = WorkOrderStatus.EvrimeGonderildi;
-            workOrder.Status = WorkOrderStatus.EvrimeGonderildi;
-            workOrder.UpdatedAt = DateTime.UtcNow;
-
-            _db.StatusHistories.Add(new StatusHistory
-            {
-                Id = Guid.NewGuid(),
-                WorkOrderId = workOrder.Id,
-                FromStatus = WorkOrderStatus.Hazirlaniyor,
-                ToStatus = WorkOrderStatus.EvrimeGonderildi,
-                ChangedBy = "System",
-                Note = $"Evrim'e basariyla gonderildi. EvrimRef: {result.EvrimReferansNo}",
-                CreatedAt = DateTime.UtcNow
-            });
-        }
-
-        await _db.SaveChangesAsync();
-
-        _logger.LogInformation(
-            "Direct declaration Evrim sonuc: {FileNumber} | Basarili: {Success} | Ref: {Ref}",
-            workOrder.FileNumber, result.Success, result.EvrimReferansNo);
+        return new DirectDeclarationResult(fileNumber, workOrder.Id, declaration.Id);
     }
 }
