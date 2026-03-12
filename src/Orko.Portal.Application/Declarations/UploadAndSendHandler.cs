@@ -372,6 +372,31 @@ public class UploadAndSendHandler
                 }
             }
 
+            // ── Vergiler (beyanname seviyesinde, Kalem_no ile gruplaniyor)
+            var vergilerElement = beyanname.Element(ns + "Vergiler");
+            if (vergilerElement != null)
+            {
+                var vergilerByKalem = vergilerElement.Elements(ns + "Vergi")
+                    .GroupBy(v => Int(v, ns, "Kalem_no") ?? 1)
+                    .ToDictionary(g => g.Key, g => g.Select((v, idx) => new EvrimVergi
+                    {
+                        SiraNo     = idx + 1,
+                        Turu       = Val(v, ns, "Kod"),
+                        Adi        = Val(v, ns, "Aciklama"),
+                        Tutari     = Dec(v, ns, "Miktar") ?? 0,
+                        Orani      = Dec(v, ns, "Oran") ?? 0,
+                        OdemeSekli = Val(v, ns, "Odeme_sekli"),
+                        Matrahi    = Dec(v, ns, "Vergi_matrahi") ?? 0,
+                    }).ToList());
+
+                foreach (var kalem in kalemler)
+                {
+                    var kalemNo = kalem.DetayNo ?? 1;
+                    if (vergilerByKalem.TryGetValue(kalemNo, out var kalemVergiler))
+                        kalem.Vergiler = kalemVergiler;
+                }
+            }
+
             // ── Firmalar
             var firmalar = firmaBilgi?
                 .Elements(ns + "firma")
@@ -493,7 +518,10 @@ public class UploadAndSendHandler
                 // refId: Evrim'in Dosya Müşavir Referansı (max 5 karakter, sabit)
                 // dosyaNo: Beyanname numarası (Evrim'de kayıt anahtarı)
                 RefId              = null,
+                Aktif              = true,
                 DosyaNo            = Val(beyanname, ns, "Beyanname_no")
+                                     ?? Val(beyanname, ns, "Referans_no"),
+                BeyannameNo        = Val(beyanname, ns, "Beyanname_no")
                                      ?? Val(beyanname, ns, "Referans_no"),
                 BeyannameTarihi    = dosyaTarihi,
                 DosyaTarihi        = dosyaTarihi,
