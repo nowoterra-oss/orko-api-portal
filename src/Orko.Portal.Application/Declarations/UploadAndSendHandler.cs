@@ -156,16 +156,37 @@ public class UploadAndSendHandler
                 request.DosyaTarihi = dt.ToString("yyyy-MM-ddTHH:mm:ss");
         }
 
-        // KDV oranı → kalem seviyesi (Vergiler listesinden)
-        var kdvVergi = sonuc.Element(sonucNs + "Vergiler")?
-            .Elements(sonucNs + "Vergi")
-            .FirstOrDefault(v => v.Element(sonucNs + "Kod")?.Value == "40");
-
-        if (kdvVergi != null && request.Kalemler != null)
+        // Vergiler → kalem bazında grupla, tüm vergi kalemlerini set et
+        var vergilerElement = sonuc.Element(sonucNs + "Vergiler");
+        if (vergilerElement != null && request.Kalemler != null)
         {
-            var kdvOrani = kdvVergi.Element(sonucNs + "Oran")?.Value?.Trim();
-            foreach (var kalem in request.Kalemler.Where(k => string.IsNullOrEmpty(k.KdvOrani)))
-                kalem.KdvOrani = kdvOrani;
+            var vergilerByKalem = vergilerElement
+                .Elements(sonucNs + "Vergi")
+                .GroupBy(v => v.Element(sonucNs + "Kalem_no")?.Value?.Trim() ?? "1")
+                .ToDictionary(g => g.Key, g => g.Select((v, idx) => new EvrimVergi
+                {
+                    SiraNo     = idx + 1,
+                    Turu       = v.Element(sonucNs + "Kod")?.Value?.Trim(),
+                    Adi        = v.Element(sonucNs + "Aciklama")?.Value?.Trim(),
+                    Tutari     = ParseDecimal(v.Element(sonucNs + "Miktar")?.Value),
+                    Orani      = ParseDecimal(v.Element(sonucNs + "Oran")?.Value),
+                    OdemeSekli = v.Element(sonucNs + "Odeme_sekli")?.Value?.Trim(),
+                    Matrahi    = ParseDecimal(v.Element(sonucNs + "Vergi_matrahi")?.Value),
+                }).ToList());
+
+            foreach (var kalem in request.Kalemler)
+            {
+                var key = (kalem.DetayNo ?? 1).ToString();
+                if (vergilerByKalem.TryGetValue(key, out var kalemVergiler))
+                {
+                    kalem.Vergiler = kalemVergiler;
+
+                    // KdvOrani: KDV (Kod=40) varsa oran bilgisini de set et
+                    var kdv = kalemVergiler.FirstOrDefault(v => v.Turu == "40");
+                    if (kdv != null && string.IsNullOrEmpty(kalem.KdvOrani))
+                        kalem.KdvOrani = kdv.Orani.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                }
+            }
         }
 
         // İstatistiki kıymet → kalem seviyesi
@@ -663,6 +684,13 @@ public class UploadAndSendHandler
         if (DateTime.TryParseExact(raw, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var dt))
             return dt.ToString("yyyy-MM-dd");
         return raw;
+    }
+
+    private static decimal ParseDecimal(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return 0;
+        return decimal.TryParse(value.Replace(',', '.'), System.Globalization.NumberStyles.Any,
+            System.Globalization.CultureInfo.InvariantCulture, out var r) ? r : 0;
     }
 
     private static string? Val(XElement? parent, XNamespace ns, string name)
